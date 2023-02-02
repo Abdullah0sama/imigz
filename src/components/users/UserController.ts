@@ -17,7 +17,6 @@ export class UserController {
         this.router.get('/', 
         AggregateListingParams,
         async (req, res) => {
-            console.log(req.query)
             const listingOptions = await UserListingSchema.parse(req.query);
             const usersData = await this.userService.getUsers(listingOptions);
             res.status(200).send({ body: usersData })
@@ -27,7 +26,7 @@ export class UserController {
             const userSelectOptions = await UserSelectSchema.parseAsync(req.query)
             const username = req.params.id;
             const userData = await this.userService.getUser(username, userSelectOptions);
-            res.status(200).send({ body: userData })
+            res.status(200).send({ data: userData })
         })
         
         this.router.post('/', async (req, res) => {
@@ -38,11 +37,13 @@ export class UserController {
 
         this.router.patch('/:id', async (req, res) => {
             const userInfo = await UpdateUserSchema.parseAsync(req.body)
-            await this.userService.updateUser(userInfo)
+            const username = req.params.id
+            await this.userService.updateUser(username, userInfo)
             res.status(204).send()
         })
 
         this.router.delete('/:id', async (req, res) => {
+            console.log(req.params.id)
             await this.userService.deleteUser(req.params.id)
             res.status(204).send();
         })

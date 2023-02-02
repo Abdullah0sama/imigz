@@ -9,22 +9,22 @@ export class UserService {
     }
 
     async getUser(username: string, userSelectOptions: UserSelectType) {
-        await this.userRepository.getUser(username, userSelectOptions)
+        return this.userRepository.getUser(username, userSelectOptions)
     }
 
     async getUsers(listingOptions: UserListingType) {
-        await this.userRepository.getUsers(listingOptions)
+        return this.userRepository.getUsers(listingOptions)
     }
 
     async createUser(userInfo: CreateUserType) {
-        await this.userRepository.createUser(userInfo)
+        return this.userRepository.createUser(userInfo)
     }
 
-    async updateUser(userInfo: UpdateUserType) {
-        await this.userRepository.updateUser(userInfo)
+    async updateUser(username: string, userInfo: UpdateUserType) {
+        return this.userRepository.updateUser(username, userInfo)
     }
 
     async deleteUser(username: string) {
-        await this.userRepository.deleteUser(username)
+        return this.userRepository.deleteUser(username)
     }
 }

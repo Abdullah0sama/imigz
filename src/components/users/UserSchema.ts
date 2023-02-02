@@ -18,6 +18,8 @@ export type UpdateUserType = z.infer<typeof UpdateUserSchema>
 
 const userKeys = CreateUserSchema.keyof()
 
+export const DefaultUserKeys: (keyof CreateUserType)[] = ['name', 'username', 'bio', 'email'];
+
 export const SortOrder = z.enum([
     'asc',
     'desc'
@@ -47,7 +49,7 @@ export const UserListingSchema = z.object({
 export type UserListingType = z.infer<typeof UserListingSchema>
 
 export const UserSelectSchema = z.object({
-    select: userKeys.array(),
-})
+    select: userKeys.array().min(1),
+}).partial()
 
 export type UserSelectType = z.infer<typeof UserSelectSchema>
