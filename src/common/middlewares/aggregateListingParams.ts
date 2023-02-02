@@ -8,16 +8,16 @@ export const AggregateListingParams = (req: express.Request, res: express.Respon
     const modifiedQuery = Object.keys(query).reduce((acc: listingKeys, cur) => {
 
         const splitedKey = cur.split('.')
-        if(splitedKey[0] === 'sortby') {
+        if(splitedKey[0] === 'orderby') {
 
-            if(!acc.sortby) {
+            if(!acc.orderby) {
                 Object.assign(acc, {
-                    'sortby': [{
+                    'orderby': [{
                         [splitedKey[1]]: query[cur]
                     }]
                 })
             } else {
-                acc.sortby.push({
+                acc.orderby.push({
                     [splitedKey[1]]: query[cur]
                 })
             }
@@ -55,7 +55,7 @@ export const AggregateListingParams = (req: express.Request, res: express.Respon
 }
 
 type listingKeys = {
-    sortby?: [{
+    orderby?: [{
         [key: string]: any
     }],
 

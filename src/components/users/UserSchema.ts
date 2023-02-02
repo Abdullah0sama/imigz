@@ -34,14 +34,14 @@ export const WhereConditions = z.enum([
 
 const WhereCondition = z.record(WhereConditions, z.any())
 const UserWhereValues = z.record(userKeys, WhereCondition)
-const UserSortbyValues = z.record(userKeys, SortOrder)
+const UserOrderbyValues = z.record(userKeys, SortOrder)
 
 export const UserListingSchema = z.object({
     select: userKeys.array(),
     limit: z.number().min(1),
     offset: z.number().min(0),
     where: UserWhereValues.array(),
-    sortby: UserSortbyValues.array()
+    orderby: UserOrderbyValues.array()
 }).partial()
 
 export type UserListingType = z.infer<typeof UserListingSchema>

@@ -1,7 +1,7 @@
 import { Router } from "express"
 import { CreateUserSchema, UpdateUserSchema, UserListingSchema, UserSelectSchema } from "./UserSchema";
 import { UserService } from "./UserService";
-import { AggregateListingParams } from "../../common/middleware/aggregateListingParams";
+import { AggregateListingParams } from "../../common/middlewares/aggregateListingParams";
 
 export class UserController {
     private readonly router: Router
