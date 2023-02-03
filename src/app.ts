@@ -16,7 +16,6 @@ export async function createApp (): Promise<express.Application> {
     app.internalModules = {
         logger: logger
     }
-    
     const db = createDB()
     const userRepo = new UserRepository(db, logger.child({source: 'UserRepository'}))
     const userService = new UserService(userRepo)
