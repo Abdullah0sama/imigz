@@ -13,12 +13,14 @@ export async function createApp (): Promise<express.Application> {
 
     app.use(express.json())
     const logger = pino()
+    app.internalModules = {
+        logger: logger
+    }
     
     const db = createDB()
     const userRepo = new UserRepository(db, logger.child({source: 'UserRepository'}))
     const userService = new UserService(userRepo)
     const userController = new UserController(userService)
-    
     userController.setupRouter()
     app.use('/users', userController.getRouter())
     

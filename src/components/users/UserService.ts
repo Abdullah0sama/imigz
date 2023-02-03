@@ -1,7 +1,7 @@
-import { CreationError, NotFoundError } from "../../common/errors/internalErrors";
-import { EntityNotCreatedError, EntityNotFoundError } from "../../common/errors/publicErrors";
-import { UserRepository } from "./UserRepository";
-import { CreateUserType, UpdateUserType, UserListingType, UserSelectType } from "./UserSchema";
+import { CreationError, NotFoundError } from '../../common/errors/internalErrors';
+import { EntityNotCreatedError, EntityNotFoundError } from '../../common/errors/publicErrors';
+import { UserRepository } from './UserRepository';
+import { CreateUserType, UpdateUserType, UserListingType, UserSelectType } from './UserSchema';
 
 export class UserService {
     private readonly userRepository: UserRepository;

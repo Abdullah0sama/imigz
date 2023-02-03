@@ -1,5 +1,5 @@
-import { ZodError } from "zod"
-import { HTTPError } from "./publicErrors"
+import { ZodError } from 'zod'
+import { HTTPError } from './publicErrors'
 
 
 
@@ -37,6 +37,6 @@ type ResolvedError = {
     statusCode: number,
     payload: {
         message: string,
-        details?: any
+        details?: object
     }
 }

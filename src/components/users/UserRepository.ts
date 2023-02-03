@@ -1,11 +1,11 @@
-import { Kysely, NoResultError } from "kysely";
-import { ComparatorsExpression, CreateUserType, DefaultUserKeys, UpdateUserType, UserListingType, UserSelectType } from "./UserSchema";
-import { Database } from "../../config/database/DatabaseTypes";
-import { QueryBuilderWithSelection } from "kysely/dist/cjs/parser/select-parser";
-import { From } from "kysely/dist/cjs/parser/table-parser";
-import { BaseLogger } from "pino";
-import { CreationError, NotFoundError } from "../../common/errors/internalErrors";
-import { DatabaseError } from "pg";
+import { Kysely, NoResultError } from 'kysely';
+import { ComparatorsExpression, CreateUserType, DefaultUserKeys, UpdateUserType, UserListingType, UserSelectType } from './UserSchema';
+import { Database } from '../../config/database/DatabaseTypes';
+import { QueryBuilderWithSelection } from 'kysely/dist/cjs/parser/select-parser';
+import { From } from 'kysely/dist/cjs/parser/table-parser';
+import { BaseLogger } from 'pino';
+import { CreationError, NotFoundError } from '../../common/errors/internalErrors';
+import { DatabaseError } from 'pg';
 
 export class UserRepository {
 
@@ -25,7 +25,6 @@ export class UserRepository {
                 .executeTakeFirstOrThrow()
             return user;    
         } catch (err) {
-            console.log(err)
             this.logger.error(err, `getUser: error when getting user '${username}'`)
             if(err instanceof NoResultError) {
                 throw new NotFoundError(`Failed to find user '${username}'`)
@@ -47,7 +46,6 @@ export class UserRepository {
 
             query = this.orderQuery(listingOptions, query)
             query = this.whereQuery(listingOptions, query)
-            console.log(query.compile().sql)
             const users = query.execute()
             return users
         } catch (err) {
@@ -100,7 +98,7 @@ export class UserRepository {
 
 
     // To be refactored to a generic function
-    private whereQuery(listingOptions: UserListingType, query: QueryBuilderWithSelection<From<Database, "user">, "user", {}, "username" | "name" | "email" | "bio">) {
+    private whereQuery(listingOptions: UserListingType, query: QueryBuilderWithSelection<From<Database, 'user'>, 'user', object, 'username' | 'name' | 'email' | 'bio'>) {
         if(!listingOptions.where) return query;
         const whereOptions = listingOptions.where;
 
@@ -119,7 +117,7 @@ export class UserRepository {
     }
 
     // To be refactored to a generic function
-    private orderQuery(listingOptions: UserListingType, query: QueryBuilderWithSelection<From<Database, "user">, "user", {}, "username" | "name" | "email" | "bio">) {
+    private orderQuery(listingOptions: UserListingType, query: QueryBuilderWithSelection<From<Database, 'user'>, 'user', object, 'username' | 'name' | 'email' | 'bio'>) {
         if(!listingOptions.orderby) return query;
 
         const orderByOptions = listingOptions.orderby;

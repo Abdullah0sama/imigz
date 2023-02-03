@@ -49,10 +49,10 @@ export const AggregateListingParams = (req: express.Request, res: express.Respon
 
 type listingKeys = {
     orderby?: {
-        [key: string]: any
+        [key: string]: unknown
     },
 
     where?: {
-        [key: string]: any
+        [key: string]: unknown
     }
 }

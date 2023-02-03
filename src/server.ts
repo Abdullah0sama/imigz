@@ -6,7 +6,7 @@ async function start() {
     const app = await createApp();
     
     app.listen(3000, () => {
-        console.log('App is running');
+        app.internalModules.logger?.info('App is running');
     })
     
 }

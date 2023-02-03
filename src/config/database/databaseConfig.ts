@@ -1,5 +1,5 @@
-import { Kysely, PostgresDialect } from "kysely"
-import { Database } from "./DatabaseTypes"
+import { Kysely, PostgresDialect } from 'kysely'
+import { Database } from './DatabaseTypes'
 import { Pool } from 'pg'
 
 export const createDB = () => {

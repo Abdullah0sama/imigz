@@ -1,5 +1,10 @@
 namespace Express {
     export interface Request {
-        modifiedQuery: any
+        modifiedQuery: unknown
+    }
+    export interface Application {
+        internalModules: {
+            logger?: import('pino').BaseLogger
+        }
     }
 }

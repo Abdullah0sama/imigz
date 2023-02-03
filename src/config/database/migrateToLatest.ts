@@ -1,7 +1,8 @@
-import { FileMigrationProvider, Kysely, Migrator } from "kysely";
+/* eslint-disable no-console */
+import { FileMigrationProvider, Migrator } from 'kysely';
 import * as path from 'path'
 import { promises as fs } from 'fs';
-import { createDB } from "./databaseConfig";
+import { createDB } from './databaseConfig';
 
 
 export async function migrateToLatest() {

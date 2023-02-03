@@ -1,5 +1,5 @@
 
-import { Kysely, Generated } from "kysely"
+import { Generated } from 'kysely'
 interface UserTable {
     id: Generated<number>
     username: string,
