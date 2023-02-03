@@ -4,13 +4,15 @@ import { Database } from "../../config/database/DatabaseTypes";
 import { QueryBuilderWithSelection } from "kysely/dist/cjs/parser/select-parser";
 import { From } from "kysely/dist/cjs/parser/table-parser";
 import { OrderByDirection } from "kysely/dist/cjs/parser/order-by-parser";
+import { BaseLogger } from "pino";
 
 export class UserRepository {
 
     private readonly db: Kysely<Database>
-
-    constructor(db: Kysely<Database>) {
+    private readonly logger: BaseLogger
+    constructor(db: Kysely<Database>, logger: BaseLogger) {
         this.db = db
+        this.logger = logger
     }
 
     async getUser(username: string, userSelectOptions: UserSelectType) {
@@ -22,8 +24,12 @@ export class UserRepository {
                 .executeTakeFirstOrThrow()
             return user;    
         } catch (err) {
-            if(err instanceof NoResultError) console.log('somethingwrong')
-            else console.log('other thing')
+            this.logger.error(`getUser: error when getting user '${username}'`, err)
+            if(err instanceof NoResultError) {
+                // do something
+            } else {
+                //something else
+            }
         }
     }
 
@@ -43,7 +49,7 @@ export class UserRepository {
             const users = query.execute()
             return users
         } catch (err) {
-
+            this.logger.error('getUsers: error when getting users', err)
         }
     }
 
@@ -55,7 +61,7 @@ export class UserRepository {
                 .executeTakeFirstOrThrow()
                 return createdUser
         } catch (err) {
-            console.log(err)
+            this.logger.error('createUser: failed to create user', err)
         }
     }
 
@@ -65,7 +71,7 @@ export class UserRepository {
                 .where('user.username', '=', username)
                 .execute()
         } catch (err) {
-
+            this.logger.error('deleteUser: failed to delete user', err)
         }
     }
 
@@ -76,7 +82,7 @@ export class UserRepository {
                 .where('username', '=', username)
                 .execute()
         } catch (err) {
-
+            this.logger.error('updateUser: failed to update user', err)
         }
     }
 
@@ -101,7 +107,7 @@ export class UserRepository {
     }
 
     // To be refactored to a generic function
-    private orderQuery<T>(listingOptions: UserListingType, query: QueryBuilderWithSelection<From<Database, "user">, "user", {}, "username" | "name" | "email" | "bio">) {
+    private orderQuery(listingOptions: UserListingType, query: QueryBuilderWithSelection<From<Database, "user">, "user", {}, "username" | "name" | "email" | "bio">) {
         if(!listingOptions.orderby) return query;
 
         const orderByOptions = listingOptions.orderby;

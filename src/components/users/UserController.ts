@@ -43,7 +43,6 @@ export class UserController {
         })
 
         this.router.delete('/:id', async (req, res) => {
-            console.log(req.params.id)
             await this.userService.deleteUser(req.params.id)
             res.status(204).send();
         })
