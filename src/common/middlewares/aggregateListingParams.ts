@@ -4,7 +4,6 @@ import express from 'express'
 export const AggregateListingParams = (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
     const query = req.query
-    
     const modifiedQuery = Object.keys(query).reduce((acc: listingKeys, cur) => {
 
         const splitedKey = cur.split('.')
@@ -41,12 +40,10 @@ export const AggregateListingParams = (req: express.Request, res: express.Respon
                 [cur]: query[cur]
             })
         }
-
-
         return acc;
     }, {})
 
-    req.query = modifiedQuery
+    req.modifiedQuery = modifiedQuery
     next()
 }
 

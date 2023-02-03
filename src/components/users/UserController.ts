@@ -17,7 +17,7 @@ export class UserController {
         this.router.get('/', 
         AggregateListingParams,
         async (req, res) => {
-            const listingOptions = await UserListingSchema.parse(req.query);
+            const listingOptions = await UserListingSchema.parse(req.modifiedQuery);
             const usersData = await this.userService.getUsers(listingOptions);
             res.status(200).send({ body: usersData })
         })

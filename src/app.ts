@@ -4,7 +4,7 @@ import { UserController } from './components/users/UserController';
 import { UserService } from './components/users/UserService';
 import { UserRepository } from './components/users/UserRepository';
 import { createDB } from './config/database/databaseConfig';
-import { ErrorHandler } from './common/middlewares/ErrorMiddlewares';
+import { ErrorHandler } from './common/errors/ErrorHandler';
 import pino from 'pino';
 
 export async function createApp (): Promise<express.Application> {

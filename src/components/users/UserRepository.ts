@@ -3,8 +3,9 @@ import { ComparatorsExpression, CreateUserType, DefaultUserKeys, UpdateUserType,
 import { Database } from "../../config/database/DatabaseTypes";
 import { QueryBuilderWithSelection } from "kysely/dist/cjs/parser/select-parser";
 import { From } from "kysely/dist/cjs/parser/table-parser";
-import { OrderByDirection } from "kysely/dist/cjs/parser/order-by-parser";
 import { BaseLogger } from "pino";
+import { CreationError, NotFoundError } from "../../common/errors/internalErrors";
+import { DatabaseError } from "pg";
 
 export class UserRepository {
 
@@ -24,11 +25,12 @@ export class UserRepository {
                 .executeTakeFirstOrThrow()
             return user;    
         } catch (err) {
-            this.logger.error(`getUser: error when getting user '${username}'`, err)
+            console.log(err)
+            this.logger.error(err, `getUser: error when getting user '${username}'`)
             if(err instanceof NoResultError) {
-                // do something
+                throw new NotFoundError(`Failed to find user '${username}'`)
             } else {
-                //something else
+                throw err
             }
         }
     }
@@ -49,7 +51,8 @@ export class UserRepository {
             const users = query.execute()
             return users
         } catch (err) {
-            this.logger.error('getUsers: error when getting users', err)
+            this.logger.error(err, 'getUsers: error when getting users')
+            throw err
         }
     }
 
@@ -61,7 +64,11 @@ export class UserRepository {
                 .executeTakeFirstOrThrow()
                 return createdUser
         } catch (err) {
-            this.logger.error('createUser: failed to create user', err)
+            this.logger.error(err, 'createUser: failed to create user')
+            if(err instanceof DatabaseError && err.message.includes('duplicate')) {
+                throw new CreationError(`Failed To create user because '${err.constraint?.split('_')[1]}' value already exists`)
+            }
+            throw err
         }
     }
 
@@ -71,18 +78,23 @@ export class UserRepository {
                 .where('user.username', '=', username)
                 .execute()
         } catch (err) {
-            this.logger.error('deleteUser: failed to delete user', err)
+            this.logger.error(err, 'deleteUser: failed to delete user')
+            throw err
         }
     }
 
     async updateUser(username: string, userInfo: UpdateUserType) {
         try {
-            await this.db.updateTable('user')
+            const { numUpdatedRows } = await this.db.updateTable('user')
                 .set(userInfo)
                 .where('username', '=', username)
-                .execute()
+                .executeTakeFirst()
+
+            if(!numUpdatedRows) throw new NotFoundError(`Couldn't find user '${username}'`)
+
         } catch (err) {
-            this.logger.error('updateUser: failed to update user', err)
+            this.logger.error(err, 'updateUser: failed to update user')
+            throw err
         }
     }
 
