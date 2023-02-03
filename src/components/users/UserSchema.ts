@@ -25,7 +25,7 @@ export const SortOrder = z.enum([
     'desc'
 ])
 
-export const WhereConditions = z.enum([
+export const ComparatorsSchema = z.enum([
     'gte', 
     'gt', 
     'lte', 
@@ -34,7 +34,9 @@ export const WhereConditions = z.enum([
     'neq'
 ])
 
-const WhereCondition = z.record(WhereConditions, z.any())
+export type ComparatorsEnum = z.infer<typeof ComparatorsSchema>
+
+const WhereCondition = z.record(ComparatorsSchema, z.any())
 const UserWhereValues = z.record(userKeys, WhereCondition)
 const UserOrderbyValues = z.record(userKeys, SortOrder)
 
@@ -42,8 +44,8 @@ export const UserListingSchema = z.object({
     select: userKeys.array(),
     limit: z.number().min(1),
     offset: z.number().min(0),
-    where: UserWhereValues.array(),
-    orderby: UserOrderbyValues.array()
+    where: UserWhereValues,
+    orderby: UserOrderbyValues
 }).partial()
 
 export type UserListingType = z.infer<typeof UserListingSchema>
@@ -53,3 +55,13 @@ export const UserSelectSchema = z.object({
 }).partial()
 
 export type UserSelectType = z.infer<typeof UserSelectSchema>
+
+type ComparatorSymbols = '>=' | '=' | '<=' | '<' | '!=' | '>';
+export const ComparatorsExpression: Record<ComparatorsEnum, ComparatorSymbols> = {
+    'gte': '>=',
+    'gt': '>',
+    'lte': '<=',
+    'lt': '<',
+    'eq': '=',
+    'neq': '!=',
+}

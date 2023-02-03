@@ -4,6 +4,7 @@ import { UserController } from './components/users/UserController';
 import { UserService } from './components/users/UserService';
 import { UserRepository } from './components/users/UserRepository';
 import { createDB } from './config/database/databaseConfig';
+
 export async function createApp (): Promise<express.Application> {
 
     const app = express();

@@ -1,6 +1,9 @@
 import { Kysely, NoResultError } from "kysely";
-import { CreateUserType, DefaultUserKeys, UpdateUserType, UserListingType, UserSelectType } from "./UserSchema";
+import { ComparatorsExpression, CreateUserType, DefaultUserKeys, UpdateUserType, UserListingType, UserSelectType } from "./UserSchema";
 import { Database } from "../../config/database/DatabaseTypes";
+import { QueryBuilderWithSelection } from "kysely/dist/cjs/parser/select-parser";
+import { From } from "kysely/dist/cjs/parser/table-parser";
+import { OrderByDirection } from "kysely/dist/cjs/parser/order-by-parser";
 
 export class UserRepository {
 
@@ -28,14 +31,15 @@ export class UserRepository {
         
         try {
             const selectedFields = (listingOptions.select) ? listingOptions.select : DefaultUserKeys
-            const query = this.db.selectFrom('user')
+            let query = this.db.selectFrom('user')
                 .select(selectedFields)
             
             if(listingOptions.limit) query.limit(listingOptions.limit)
             if(listingOptions.offset) query.offset(listingOptions.offset)
 
-            // query.where(listingOptions.where)
-
+            query = this.orderQuery(listingOptions, query)
+            query = this.whereQuery(listingOptions, query)
+            console.log(query.compile().sql)
             const users = query.execute()
             return users
         } catch (err) {
@@ -76,12 +80,36 @@ export class UserRepository {
         }
     }
 
-    // private whereQuery(where: Pick<UserListingType, 'where'>) {
-        
-    //     if(!where.where) return ;
-    //     for(const q of where.where) {
+
+    // To be refactored to a generic function
+    private whereQuery(listingOptions: UserListingType, query: QueryBuilderWithSelection<From<Database, "user">, "user", {}, "username" | "name" | "email" | "bio">) {
+        if(!listingOptions.where) return query;
+        const whereOptions = listingOptions.where;
+
+        for(const field of Object.keys(whereOptions)) {
+            const typedField = field as (keyof typeof whereOptions)
+            // Assumption is there is only one comparator expression for each field
+            const conditionExpression = whereOptions[typedField];
+            if(!conditionExpression) continue;
+            const condition = Object.keys(conditionExpression) as (keyof typeof conditionExpression)[] 
+
+            query = query.where(typedField, ComparatorsExpression[condition[0]], conditionExpression[condition[0]])
             
-            
-    //     }
-    // }
+        }
+
+        return query;
+    }
+
+    // To be refactored to a generic function
+    private orderQuery<T>(listingOptions: UserListingType, query: QueryBuilderWithSelection<From<Database, "user">, "user", {}, "username" | "name" | "email" | "bio">) {
+        if(!listingOptions.orderby) return query;
+
+        const orderByOptions = listingOptions.orderby;
+        for(const field of Object.keys(orderByOptions)) {
+            const typedField = field as (keyof typeof orderByOptions)
+            query = query.orderBy(typedField, orderByOptions[typedField])
+        }
+        return query
+    }
 }
+

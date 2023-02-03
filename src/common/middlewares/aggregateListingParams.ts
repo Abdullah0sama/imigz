@@ -12,32 +12,28 @@ export const AggregateListingParams = (req: express.Request, res: express.Respon
 
             if(!acc.orderby) {
                 Object.assign(acc, {
-                    'orderby': [{
+                    'orderby': {
                         [splitedKey[1]]: query[cur]
-                    }]
+                    }
                 })
             } else {
-                acc.orderby.push({
-                    [splitedKey[1]]: query[cur]
-                })
+                acc.orderby[splitedKey[1]] = query[cur]
             }
 
         } else if(splitedKey[0] === 'where') {
 
             if(!acc.where) {
                 Object.assign(acc, {
-                    'where': [{
+                    'where': {
                         [splitedKey[1]]: {
                             [splitedKey[2]]: query[cur]
                         }
-                    }]
-                })
-            } else {
-                acc.where.push({
-                    [splitedKey[1]]: {
-                        [splitedKey[2]]: query[cur]
                     }
                 })
+            } else {
+                acc.where[splitedKey[1]] = {
+                        [splitedKey[2]]: query[cur]
+                    }
             }
 
         } else {
@@ -55,11 +51,11 @@ export const AggregateListingParams = (req: express.Request, res: express.Respon
 }
 
 type listingKeys = {
-    orderby?: [{
+    orderby?: {
         [key: string]: any
-    }],
+    },
 
-    where?: [{
+    where?: {
         [key: string]: any
-    }]
+    }
 }
