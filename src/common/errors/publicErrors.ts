@@ -34,3 +34,21 @@ export class EntityNotCreatedError extends HTTPError {
         })
     }
 }
+
+export class UnsupportedMediaType extends HTTPError {
+    constructor(params: ErrorParams) {
+        super({
+            statusCode: 415,
+            message: params.message
+        })
+    }
+}
+
+export class PayloadTooLarge extends HTTPError {
+    constructor(params: ErrorParams) {
+        super({
+            statusCode: 413,
+            message: params.message
+        })
+    }
+}

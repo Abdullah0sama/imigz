@@ -1,3 +1,4 @@
+import { S3ClientConfig } from "@aws-sdk/client-s3"
 import { ConnectionConfig } from "pg"
 
 
@@ -8,7 +9,12 @@ export const config: Config = {
         host: 'localhost',
         user: 'admin',
         database: 'imigz',
-        password: 'postgres'
+        password: 'postgres',
+    },
+    aws: {
+        s3: {
+            region: 'us-east-1',
+        }
     }
 }
 
@@ -16,5 +22,8 @@ export const config: Config = {
 
 export interface Config {
     port: number
-    database: ConnectionConfig
+    database: ConnectionConfig,
+    aws: {
+        s3: S3ClientConfig
+    }
 }
