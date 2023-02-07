@@ -56,12 +56,15 @@ export class MediaService {
 
                 const key = uuidv4();
                 const destinationFileName = `${key}.${fileType}`
-                const { destinationPromise, destinationStream, cleanUp } = this.saveMediaToLocalDisk(destinationFileName)
+                const { destinationPromise, destinationStream, cleanUp } = this.saveMediaToS3(destinationFileName)
                 
                 fileStream.pipe(destinationStream)
                 destinationPromise.then((res) => resolve([ key ]))
+                .catch((err) => {
+                    this.logger.error(err)
+                    reject(err)
+                })
 
-                
                 fileStream.on('limit', async () => {
                     bb.emit('error', new PayloadTooLarge({ message: 'Payload is larger than server limit' }))
                     await cleanUp()
@@ -83,7 +86,7 @@ export class MediaService {
 
     private deleteMediaFromS3(filePath: string) {
         return this.s3Client.send(new DeleteObjectCommand({
-            Bucket: '699144434216-testing',
+            Bucket: '699144434216-ttt',
             Key: filePath,
         }))
     }
@@ -92,7 +95,7 @@ export class MediaService {
         const destinationPath = path.join(s3UploadDestination, filePath)
         const destinationStream = new PassThrough()
         const uploadParams: PutObjectCommandInput = {
-            Bucket: '699144434216-testing',
+            Bucket: '699144434216-ttt',
             Key: destinationPath,
             Body: destinationStream,
         }
@@ -101,11 +104,14 @@ export class MediaService {
             const upload = new Upload({
                 client: this.s3Client,
                 params: uploadParams,
-                queueSize: 4,
+                queueSize: 8,
+                partSize: 1024 * 1024 * 5,
                 leavePartsOnError: false,
+                
             })
             upload.done().then(value => resolve(value))
             .catch((err) => reject(err))
+            // upload.on('httpUploadProgress', (porg) => console.log(porg))
         })
 
         const cleanUp = () => this.deleteMediaFromS3(destinationPath)
@@ -138,10 +144,6 @@ export class MediaService {
                 files: 1,
                 fileSize: MediaService.maxFileSize,
             }
-        })
-
-        bb.on('close', () => {
-            this.logger.info('bb finished')
         })
 
         return bb
