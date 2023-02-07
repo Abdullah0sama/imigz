@@ -1,5 +1,6 @@
 
 import { Generated } from 'kysely'
+
 interface UserTable {
     id: Generated<number>
     username: string,
@@ -9,6 +10,15 @@ interface UserTable {
     created_at: Generated<Date>
 }
 
+export interface MediaTable {
+    id: Generated<number>,
+    title: string | null,
+    description: string | null,
+    key: string,
+    created_at: Generated<Date>
+}
+
 export interface Database {
-    user: UserTable
+    user: UserTable,
+    media: MediaTable
 }

@@ -10,6 +10,7 @@ import { MediaController } from './components/media/MediaController';
 import { MediaService } from './components/media/MediaService';
 import { S3Client } from '@aws-sdk/client-s3'
 import { config } from './config/config';
+import { MediaRepository } from './components/media/MediaRepository';
 export function createApp (): express.Application {
 
     const app = express();
@@ -28,7 +29,8 @@ export function createApp (): express.Application {
     const userRepo = new UserRepository(db, logger.child({source: 'UserRepository'}))
     const userService = new UserService(userRepo)
     const userController = new UserController(userService)
-    const mediaService = new MediaService(s3Client, logger.child({source: 'UserRepository'}))
+    const mediaRepository = new MediaRepository(db, logger.child({source: 'MediaRepository'}))
+    const mediaService = new MediaService(s3Client, mediaRepository, logger.child({source: 'MediaService'}))
     const mediaController = new MediaController(mediaService)
     userController.setupRouter()
     app.use('/users', userController.getRouter())

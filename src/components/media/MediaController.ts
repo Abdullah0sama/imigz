@@ -15,7 +15,7 @@ export class MediaController {
         
         this.router.post('/upload', (req, res) => {   
     
-            const streamToLocal = this.mediaService.saveToS3(req.headers, res)
+            const streamToLocal = this.mediaService.saveMedia(req.headers, res)
             req.pipe(streamToLocal)
 
         })
