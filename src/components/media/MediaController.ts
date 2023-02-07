@@ -13,10 +13,12 @@ export class MediaController {
 
     setupRouter() {
         
-        this.router.post('/upload', (req, res) => {   
+        this.router.post('/upload', async (req, res) => {   
     
-            const streamToLocal = this.mediaService.saveMedia(req.headers, res)
-            req.pipe(streamToLocal)
+            const key = await this.mediaService.saveMedia(req);
+            return res.status(303).send({ 
+                data: { key }
+            })
 
         })
 
