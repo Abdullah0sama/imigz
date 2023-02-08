@@ -9,6 +9,8 @@ import { DeleteObjectCommand, PutObjectCommandInput, S3Client } from '@aws-sdk/c
 import { Upload } from '@aws-sdk/lib-storage';
 import { MediaRepository } from './MediaRepository';
 import { PassThrough } from 'node:stream'
+import { config } from '../../config/config';
+import { MediaSelectType, UpdateMediaType } from './MediaSchema';
 
 const localUploadDestination = path.join(__dirname, '../../../', 'uploads')
 const s3UploadDestination = path.join('uploads');
@@ -30,6 +32,21 @@ export class MediaService {
             fs.mkdirSync(localUploadDestination)
     }
 
+
+    async deleteMedia(key: string) {
+        await this.mediaRepositroy.deleteMedia(key);
+        await this.deleteMediaFromS3(key)
+    }
+
+    async updateMedia(key: string, mediaInfo: UpdateMediaType) {
+        return this.mediaRepositroy.updateMedia(key, mediaInfo);
+    }
+
+    async getMedia(key: string, mediaSelectOptions: MediaSelectType) {
+        return this.mediaRepositroy.getMedia(key, mediaSelectOptions)
+    }
+
+
     async saveMedia(req: express.Request) {
         
         // We only accept on file at a time for now
@@ -38,6 +55,7 @@ export class MediaService {
 
         return key
     }
+
 
     private uploadPromise(req: express.Request): Promise<string[]> {
         return new Promise((resolve, reject) => {
@@ -86,7 +104,8 @@ export class MediaService {
 
     private deleteMediaFromS3(filePath: string) {
         return this.s3Client.send(new DeleteObjectCommand({
-            Bucket: '699144434216-ttt',
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            Bucket: config.aws.bucket,
             Key: filePath,
         }))
     }
@@ -95,7 +114,8 @@ export class MediaService {
         const destinationPath = path.join(s3UploadDestination, filePath)
         const destinationStream = new PassThrough()
         const uploadParams: PutObjectCommandInput = {
-            Bucket: '699144434216-ttt',
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            Bucket: config.aws.bucket,
             Key: destinationPath,
             Body: destinationStream,
         }

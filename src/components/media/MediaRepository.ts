@@ -61,7 +61,7 @@ export class MediaRepository {
                 .where('key', '=', key)
                 .executeTakeFirst()
 
-            if(!numUpdatedRows) throw new NotFoundError(`Couldn't find media '${key}'`)
+            if(!numUpdatedRows) throw new NotFoundError(`Failed to find media '${key}'`)
 
         } catch (err) {
             this.logger.error(err, 'updateMedia: Failed to save media info');

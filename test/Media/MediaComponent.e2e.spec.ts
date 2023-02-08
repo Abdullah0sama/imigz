@@ -1,16 +1,15 @@
 import { describe, expect, it, test } from '@jest/globals'
 import request from 'supertest'
-import { createApp } from '../src/app'
+import { createApp } from '../../src/app'
 import * as path from 'path'
 
 const app = createApp()
 
-const mediaPath = path.join(__dirname, 'mock_data/media')
+const mediaPath = path.join(__dirname, '../mock_data/media')
 
 describe('POST /upload', () => {
 
     it('Should upload image and get the url pointing to it', async () => {
-
         const response =  await request(app)
             .post('/media/upload')
             .attach('media', mediaPath + '/tom-gainor-unsplash.jpg')
