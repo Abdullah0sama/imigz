@@ -17,7 +17,8 @@ export const config: Config = {
             endpoint: 'http://localhost:4566',
             forcePathStyle: true
         },
-        bucket: 'testing-123456'
+        bucket: 'imigiz-699144434216',
+        cloudfrontURL: 'somethinhere',
     }
 }
 
@@ -28,6 +29,7 @@ export interface Config {
     database: ConnectionConfig,
     aws: {
         s3: S3ClientConfig,
-        bucket: string
+        bucket: string,
+        cloudfrontURL: string
     }
 }

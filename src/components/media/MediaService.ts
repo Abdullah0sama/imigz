@@ -4,13 +4,14 @@ import express from 'express'
 import * as fs from 'fs'
 import * as path from 'path'
 import { v4 as uuidv4 } from 'uuid'
-import { PayloadTooLarge, UnsupportedMediaType } from '../../common/errors/publicErrors';
+import { EntityNotCreatedError, PayloadTooLarge, UnsupportedMediaType } from '../../common/errors/publicErrors';
 import { DeleteObjectCommand, PutObjectCommandInput, S3Client } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { MediaRepository } from './MediaRepository';
 import { PassThrough } from 'node:stream'
 import { config } from '../../config/config';
 import { MediaSelectType, UpdateMediaType } from './MediaSchema';
+import { CreationError } from '../../common/errors/internalErrors';
 
 const localUploadDestination = path.join(__dirname, '../../../', 'uploads')
 const s3UploadDestination = path.join('uploads');
@@ -18,7 +19,7 @@ const s3UploadDestination = path.join('uploads');
 export class MediaService {
     private static readonly acceptedFiles = ['jpeg', 'jpg', 'png', 'gif']
     private static readonly maxFileSize = 1024 * 1024 * 15;
-
+    private static readonly cloudfrontURL = config.aws.cloudfrontURL
     private readonly logger: BaseLogger
     private readonly s3Client: S3Client
     private readonly mediaRepositroy: MediaRepository
@@ -28,8 +29,8 @@ export class MediaService {
         this.s3Client = s3Client
         this.mediaRepositroy = mediaRepository
 
-        if(!fs.existsSync(localUploadDestination))
-            fs.mkdirSync(localUploadDestination)
+        // if(!fs.existsSync(localUploadDestination))
+        //     fs.mkdirSync(localUploadDestination)
     }
 
 
@@ -49,11 +50,24 @@ export class MediaService {
 
     async saveMedia(req: express.Request) {
         
-        // We only accept on file at a time for now
-        const [ key ] = await this.uploadPromise(req)
-        await this.mediaRepositroy.createMedia({ key })
+        try {
+            // We only accept on file at a time for now
+            const [ key ] = await this.uploadPromise(req)
+            await this.mediaRepositroy.createMedia({ key })
+            
+            return { 
+                key, 
+                baseURL: MediaService.cloudfrontURL 
+            }
+        } catch (err) {
+            if(err instanceof CreationError) {
+                throw new EntityNotCreatedError({
+                    message: err.message
+                })
+            }
+            throw err   
+        }
 
-        return key
     }
 
 
@@ -74,7 +88,7 @@ export class MediaService {
 
                 const key = uuidv4();
                 const destinationFileName = `${key}.${fileType}`
-                const { destinationPromise, destinationStream, cleanUp } = this.saveMediaToS3(destinationFileName)
+                const { destinationPromise, destinationStream, cleanUp } = this.saveMediaToS3(destinationFileName, info.mimeType)
                 
                 fileStream.pipe(destinationStream)
                 destinationPromise.then((res) => resolve([ key ]))
@@ -110,7 +124,7 @@ export class MediaService {
         }))
     }
 
-    private saveMediaToS3(filePath: string): SaveToMedia {
+    private saveMediaToS3(filePath: string, mimeType: string): SaveToMedia {
         const destinationPath = path.join(s3UploadDestination, filePath)
         const destinationStream = new PassThrough()
         const uploadParams: PutObjectCommandInput = {
@@ -118,6 +132,7 @@ export class MediaService {
             Bucket: config.aws.bucket,
             Key: destinationPath,
             Body: destinationStream,
+            ContentType: mimeType
         }
 
         const destinationPromise = new Promise((resolve, reject) => {
@@ -127,7 +142,6 @@ export class MediaService {
                 queueSize: 8,
                 partSize: 1024 * 1024 * 5,
                 leavePartsOnError: false,
-                
             })
             upload.done().then(value => resolve(value))
             .catch((err) => reject(err))

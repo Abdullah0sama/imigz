@@ -15,9 +15,9 @@ export class MediaController {
     setupRouter() {
         
         this.router.post('/upload', async (req, res) => {   
-            const key = await this.mediaService.saveMedia(req);
-            return res.status(303).send({ 
-                data: { key }
+            const storageLocation = await this.mediaService.saveMedia(req);
+            return res.status(201).send({ 
+                data: { ...storageLocation }
             })
         })
 

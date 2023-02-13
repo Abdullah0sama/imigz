@@ -13,25 +13,26 @@ describe('POST /upload', () => {
         const response =  await request(app)
             .post('/media/upload')
             .attach('media', mediaPath + '/tom-gainor-unsplash.jpg')
-            .expect(303)
+            .expect(201)
 
-            console.log(response.body)
             expect(response.body.data).toBeDefined()
             expect(response.body.data.key).toBeDefined()
+            expect(response.body.data.baseURL).toBeDefined()
 
-    })
+    }, 10000)
 
     it('Should upload gif and get the url pointing to it', async () => {
 
         const response =  await request(app)
             .post('/media/upload')
             .attach('media', mediaPath + '/feeling-rough-voldemort.gif')
-            .expect(303)
+            .expect(201)
 
-            console.log(response.body)
             expect(response.body.data).toBeDefined()
             expect(response.body.data.key).toBeDefined()
-    })
+            expect(response.body.data.baseURL).toBeDefined()
+
+    }, 10000)
 
 
     it('Should return an error when an unsuporrted type of media is uploaded', async () => {
