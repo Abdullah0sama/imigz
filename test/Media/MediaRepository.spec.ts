@@ -30,14 +30,14 @@ describe('MediaRepository: createMedia', () => {
 
     it('Should create media record in database and return id', async () => {
         const mediaInfo = mediaData1
-        const { id } = await mediaRepository.createMedia(mediaInfo)
+        const { id } = await mediaRepository.createMedia(null, mediaInfo)
         expect(id).toBeDefined()
     })
 
     it('Should throw an error when key is duplicate', async () => {
         const mediaInfo = mediaData1
-        await mediaRepository.createMedia(mediaInfo)
-        await expect(mediaRepository.createMedia(mediaInfo))
+        await mediaRepository.createMedia(null, mediaInfo)
+        await expect(mediaRepository.createMedia(null, mediaInfo))
             .rejects
             .toThrowError(new CreationError(`Failed To create media because 'key' value already exists`))
     })

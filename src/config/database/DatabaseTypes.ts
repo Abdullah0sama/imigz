@@ -1,5 +1,5 @@
 
-import { Generated } from 'kysely'
+import { Generated,  } from 'kysely'
 
 interface UserTable {
     id: Generated<number>
@@ -15,6 +15,7 @@ export interface MediaTable {
     title: string | null,
     description: string | null,
     key: string,
+    userRef: Number | null
     created_at: Generated<Date>
 }
 

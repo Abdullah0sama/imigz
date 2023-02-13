@@ -1,6 +1,7 @@
 import express, { Router } from 'express'
 import { MediaService } from './MediaService'
 import { MediaSelectSchema, updateMediaSchema } from './MediaSchema'
+import { checkJWT } from '../../common/middlewares/checkJwt'
 
 
 export class MediaController {
@@ -14,8 +15,11 @@ export class MediaController {
 
     setupRouter() {
         
-        this.router.post('/upload', async (req, res) => {   
-            const storageLocation = await this.mediaService.saveMedia(req);
+        this.router.post('/upload', 
+        checkJWT,
+        async (req, res) => {   
+            const { userId } = req.userToken
+            const storageLocation = await this.mediaService.saveMedia(userId, req);
             return res.status(201).send({ 
                 data: { ...storageLocation }
             })
@@ -30,12 +34,16 @@ export class MediaController {
             })
         })
 
-        this.router.delete('/:key', async (req, res) => {
+        this.router.delete('/:key', 
+        checkJWT,
+        async (req, res) => {
             await this.mediaService.deleteMedia(req.params.key)
             res.status(204).send()
         })
 
-        this.router.patch('/:key', async (req, res) => {
+        this.router.patch('/:key', 
+        checkJWT,
+        async (req, res) => {
             const updateMediaInfo = await updateMediaSchema.parse(req.body)
             const key = req.params.key
             await this.mediaService.updateMedia(key, updateMediaInfo)

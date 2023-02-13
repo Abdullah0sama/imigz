@@ -4,14 +4,14 @@ import express from 'express'
 import * as fs from 'fs'
 import * as path from 'path'
 import { v4 as uuidv4 } from 'uuid'
-import { EntityNotCreatedError, PayloadTooLarge, UnsupportedMediaType } from '../../common/errors/publicErrors';
+import { EntityNotCreatedError, EntityNotFoundError, PayloadTooLarge, UnsupportedMediaType } from '../../common/errors/publicErrors';
 import { DeleteObjectCommand, PutObjectCommandInput, S3Client } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { MediaRepository } from './MediaRepository';
 import { PassThrough } from 'node:stream'
 import { config } from '../../config/config';
 import { MediaSelectType, UpdateMediaType } from './MediaSchema';
-import { CreationError } from '../../common/errors/internalErrors';
+import { CreationError, NotFoundError } from '../../common/errors/internalErrors';
 
 const localUploadDestination = path.join(__dirname, '../../../', 'uploads')
 const s3UploadDestination = path.join('uploads');
@@ -45,15 +45,21 @@ export class MediaService {
 
     async getMedia(key: string, mediaSelectOptions: MediaSelectType) {
         return this.mediaRepositroy.getMedia(key, mediaSelectOptions)
+            .catch((err) => {
+                if(err instanceof NotFoundError) throw new EntityNotFoundError({ 
+                    message: err.message
+                })
+                else throw err;
+            })
     }
 
 
-    async saveMedia(req: express.Request) {
+    async saveMedia(userId: number, req: express.Request) {
         
         try {
             // We only accept on file at a time for now
             const [ key ] = await this.uploadPromise(req)
-            await this.mediaRepositroy.createMedia({ key })
+            await this.mediaRepositroy.createMedia(userId, { key })
             
             return { 
                 key, 

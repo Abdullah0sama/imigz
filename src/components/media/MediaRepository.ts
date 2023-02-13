@@ -31,16 +31,19 @@ export class MediaRepository {
             this.logger.error(err, `getMedia: error when getting key '${key}'`)
             if(err instanceof NoResultError) {
                 throw new NotFoundError(`Failed to find media '${key}'`)
+            } else if(err instanceof DatabaseError && err.message.includes('invalid input syntax for type uuid')) {
+                // postgres throws an error when key is not uuid, which should result to Not found error to end user
+                throw new NotFoundError(`Failed to find media '${key}'`)
             } else {
                 throw err
             }
         }
     }
 
-    async createMedia(mediaInfo: CreateMediaType) {
+    async createMedia(userId: number | null, mediaInfo: CreateMediaType) {
         try {
             const { id } = await this.db.insertInto('media')
-                .values(mediaInfo)
+                .values({...mediaInfo, userRef: userId})
                 .returning(['id'])
                 .executeTakeFirstOrThrow()
             return { id }
