@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { CreateUserSchema, UpdateUserSchema, UserListingSchema, UserSelectSchema } from './UserSchema';
 import { UserService } from './UserService';
 import { AggregateListingParams } from '../../common/middlewares/aggregateListingParams';
+import { checkJWT } from '../../common/middlewares/checkJwt';
 
 export class UserController {
     private readonly router: Router
@@ -35,14 +36,18 @@ export class UserController {
             return res.status(201).send({ data: user });
         })
 
-        this.router.patch('/:id', async (req, res) => {
+        this.router.patch('/:id', 
+        checkJWT,
+        async (req, res) => {
             const userInfo = await UpdateUserSchema.parseAsync(req.body)
             const username = req.params.id
             await this.userService.updateUser(username, userInfo)
             res.status(204).send()
         })
 
-        this.router.delete('/:id', async (req, res) => {
+        this.router.delete('/:id', 
+        checkJWT,
+        async (req, res) => {
             await this.userService.deleteUser(req.params.id)
             res.status(204).send();
         })
