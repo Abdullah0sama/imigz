@@ -52,3 +52,21 @@ export class PayloadTooLarge extends HTTPError {
         })
     }
 }
+
+export class UnauthorizedError extends HTTPError {
+    constructor(params: ErrorParams) {
+        super({
+            statusCode: 401,
+            message: params.message
+        })
+    }
+}
+
+export class ForbiddenError extends HTTPError {
+    constructor(params: ErrorParams) {
+        super({
+            statusCode: 403,
+            message: params.message
+        })
+    }
+}
