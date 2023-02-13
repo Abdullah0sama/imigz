@@ -5,18 +5,19 @@ import { UserService } from './components/users/UserService';
 import { UserRepository } from './components/users/UserRepository';
 import { createDB } from './config/database/databaseConfig';
 import { ErrorHandler } from './common/errors/ErrorHandler';
-import pino from 'pino';
+import pino, { LoggerOptions } from 'pino';
 import { MediaController } from './components/media/MediaController';
 import { MediaService } from './components/media/MediaService';
 import { S3Client } from '@aws-sdk/client-s3'
 import { config } from './config/config';
 import { MediaRepository } from './components/media/MediaRepository';
-export function createApp (): express.Application {
+
+export function createApp (loggerOptions: LoggerOptions = {}): express.Application {
 
     const app = express();
-
+    pino()
     app.use(express.json())
-    const logger = pino()
+    const logger = pino(loggerOptions)
     app.internalModules = {
         logger: logger
     }

@@ -5,7 +5,9 @@ import { userData2 } from '../mock_data/userData'
 import { generateJwtToken } from '../../src/common/utils/jwtUtils'
 import { config } from '../../src/config/config'
 
-const app = createApp()
+const app = createApp({
+    level: 'silent'
+})
 
 describe('User Component', () => {
     

@@ -9,7 +9,9 @@ import { createDB } from '../../src/config/database/databaseConfig'
 import { fakePino } from '../utils'
 import { userData1 } from '../mock_data/userData'
 
-const app = createApp()
+const app = createApp({
+    level: 'silent'
+})
 const db = createDB()
 const userRepository = new UserRepository(db, fakePino)
 
