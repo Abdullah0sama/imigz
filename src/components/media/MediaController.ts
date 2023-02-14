@@ -3,6 +3,7 @@ import { MediaService } from './MediaService'
 import { MediaListingOptionsSchema, MediaSelectSchema, updateMediaSchema } from './MediaSchema'
 import { checkJWT } from '../../common/middlewares/checkJwt'
 import { AggregateListingParams } from '../../common/middlewares/aggregateListingParams'
+import { isResourceOwner } from '../../common/middlewares/isResourceOwner'
 
 
 export class MediaController {
@@ -47,6 +48,7 @@ export class MediaController {
 
         this.router.delete('/:key', 
         checkJWT,
+        isResourceOwner(this.mediaService, 'key', 'userRef', 'userId'),
         async (req, res) => {
             await this.mediaService.deleteMedia(req.params.key)
             res.status(204).send()
@@ -54,6 +56,7 @@ export class MediaController {
 
         this.router.patch('/:key', 
         checkJWT,
+        isResourceOwner(this.mediaService, 'key', 'userRef', 'userId'),
         async (req, res) => {
             const updateMediaInfo = await updateMediaSchema.parse(req.body)
             const key = req.params.key

@@ -8,7 +8,7 @@ export function isRouteOwner(key: keyof UserTokenType) {
         if(req.params[key] === req.userToken[key]) {
             next()
         } else {
-            next(new ForbiddenError({ message: 'Not allowed through this route' }))
+            next(new ForbiddenError({ message: 'Not allowed to get through this route' }))
         }
     }
 }
