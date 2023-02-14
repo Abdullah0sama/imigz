@@ -19,8 +19,12 @@ export const config: Config = {
     aws: {
         s3: {
             region: 'us-east-1',
-            endpoint: 'http://localhost:4566',
-            forcePathStyle: true
+            endpoint: 'http://127.0.0.1:4566',
+            forcePathStyle: true,
+            credentials: {
+                accessKeyId: 'somthingDump',
+                secretAccessKey: 'somethingDumper'
+            }
         },
         bucket: 'imigiz-699144434216',
         cloudfrontURL: 'somethinhere',

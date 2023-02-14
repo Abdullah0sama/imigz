@@ -20,6 +20,7 @@ services:
       - DOCKER_HOST=unix:///var/run/docker.sock
       - AWS_DEFAULT_REGION=us-east-1
       - LOCALSTACK_PERSISTENCE=1
+      - HOSTNAME_EXTERNAL=localhost
 
     volumes:
       - './localstack-init.sh:/etc/localstack/init/ready.d/init-aws.sh'
