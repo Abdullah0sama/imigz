@@ -1,10 +1,7 @@
 namespace Express {
     export interface Request {
         modifiedQuery: unknown,
-        userToken: {
-            userId: number,
-            username: string
-        }
+        userToken: import('../src/components/auth/AuthSchema').UserTokenType
     }
     export interface Application {
         internalModules: {

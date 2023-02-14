@@ -3,6 +3,7 @@ import { CreateUserSchema, UpdateUserSchema, UserListingSchema, UserSelectSchema
 import { UserService } from './UserService';
 import { AggregateListingParams } from '../../common/middlewares/aggregateListingParams';
 import { checkJWT } from '../../common/middlewares/checkJwt';
+import { isRouteOwner } from '../../common/middlewares/isRouteOwner';
 
 export class UserController {
     private readonly router: Router
@@ -23,9 +24,9 @@ export class UserController {
             res.status(200).send({ body: usersData })
         })
 
-        this.router.get('/:id', async (req, res) => {
+        this.router.get('/:username', async (req, res) => {
             const userSelectOptions = await UserSelectSchema.parseAsync(req.query)
-            const username = req.params.id;
+            const username = req.params.username;
             const userData = await this.userService.getUser(username, userSelectOptions);
             res.status(200).send({ data: userData })
         })
@@ -36,19 +37,21 @@ export class UserController {
             return res.status(201).send({ data: user });
         })
 
-        this.router.patch('/:id', 
+        this.router.patch('/:username', 
         checkJWT,
+        isRouteOwner('username'),
         async (req, res) => {
             const userInfo = await UpdateUserSchema.parseAsync(req.body)
-            const username = req.params.id
+            const username = req.params.username
             await this.userService.updateUser(username, userInfo)
             res.status(204).send()
         })
 
-        this.router.delete('/:id', 
+        this.router.delete('/:username', 
         checkJWT,
+        isRouteOwner('username'),
         async (req, res) => {
-            await this.userService.deleteUser(req.params.id)
+            await this.userService.deleteUser(req.params.username)
             res.status(204).send();
         })
 
