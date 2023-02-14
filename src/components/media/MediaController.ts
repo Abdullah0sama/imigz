@@ -1,7 +1,8 @@
 import express, { Router } from 'express'
 import { MediaService } from './MediaService'
-import { MediaSelectSchema, updateMediaSchema } from './MediaSchema'
+import { MediaListingOptionsSchema, MediaSelectSchema, updateMediaSchema } from './MediaSchema'
 import { checkJWT } from '../../common/middlewares/checkJwt'
+import { AggregateListingParams } from '../../common/middlewares/aggregateListingParams'
 
 
 export class MediaController {
@@ -31,6 +32,16 @@ export class MediaController {
             const mediaInfo = await this.mediaService.getMedia(key, mediaSelectOptions)
             res.status(200).send({
                 data: mediaInfo
+            })
+        })
+
+        this.router.get('/',
+        AggregateListingParams, 
+        async (req, res) => {
+            const listingOptions = await MediaListingOptionsSchema.parse(req.modifiedQuery)
+            const mediaListing = await this.mediaService.listMedia(listingOptions)
+            res.status(200).send({
+                data: mediaListing
             })
         })
 

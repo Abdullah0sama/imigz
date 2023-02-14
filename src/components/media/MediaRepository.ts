@@ -1,9 +1,10 @@
 import { BaseLogger } from 'pino'
 import { Database } from '../../config/database/DatabaseTypes'
 import { Kysely, NoResultError } from 'kysely'
-import { CreateMediaType, MediaDefaultFields, MediaSelectType, UpdateMediaType } from './MediaSchema'
+import { CreateMediaType, MediaDefaultFields, MediaListingType, MediaSelectType, UpdateMediaType } from './MediaSchema'
 import { DatabaseError } from 'pg'
 import { CreationError, NotFoundError } from '../../common/errors/internalErrors'
+import { ComparatorsExpression } from '../../common/schema'
 
 
 export class MediaRepository {
@@ -37,6 +38,56 @@ export class MediaRepository {
             } else {
                 throw err
             }
+        }
+    }
+
+    async listMedia(listingOptions: MediaListingType) {
+        const { where: whereOptions, 
+            limit: limitOptions, 
+            offset: offsetOptions, 
+            select: selectOptions, 
+            orderby: orderbyOptions } = listingOptions 
+
+        try {
+            let query = this.db.selectFrom('media')
+
+            // Do with select username is not supported yet
+
+            const filteredSelectFields = (selectOptions) ?
+                selectOptions.filter(field => field != 'username') as Exclude<typeof selectOptions[number], 'username'>[]
+                : MediaDefaultFields
+
+            query = query.select(filteredSelectFields)
+            
+            if(whereOptions) {
+                Object.keys(whereOptions).forEach((key) => {
+                    const typedKey = key as keyof typeof whereOptions
+                    if(typedKey == 'username') return;
+                    const conditionExpression = whereOptions[typedKey]
+                    if(!conditionExpression) return;
+                    const [condition] = Object.keys(conditionExpression) as (keyof typeof conditionExpression)[] 
+    
+                    query = query.where(typedKey, ComparatorsExpression[condition], conditionExpression[condition])
+                })
+            }
+
+            if(orderbyOptions) {
+                Object.keys(orderbyOptions).forEach((key) => {
+                    const typedKey = key as keyof typeof whereOptions
+                    if(typedKey == 'username') return;
+                    query = query.orderBy(typedKey, orderbyOptions[typedKey])
+                })
+            }
+
+                            
+            if(limitOptions) query = query.limit(limitOptions)
+            if(offsetOptions) query = query.offset(offsetOptions)
+
+            const listingData = await query.execute()
+            return listingData
+        } catch(err) {
+            this.logger.error(err, `listMedia: error while trying to get list '${listingOptions}'`)
+
         }
     }
 
@@ -83,5 +134,4 @@ export class MediaRepository {
             throw err;
         }
     }
-
 }

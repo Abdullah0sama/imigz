@@ -1,11 +1,12 @@
 import { Kysely, NoResultError } from 'kysely';
-import { ComparatorsExpression, CreateUserType, DefaultUserKeys, UpdateUserType, UserListingType, UserSelectType } from './UserSchema';
+import { CreateUserType, DefaultUserKeys, UpdateUserType, UserListingType, UserSelectType } from './UserSchema';
 import { Database } from '../../config/database/DatabaseTypes';
 import { QueryBuilderWithSelection } from 'kysely/dist/cjs/parser/select-parser';
 import { From } from 'kysely/dist/cjs/parser/table-parser';
 import { BaseLogger } from 'pino';
 import { CreationError, NotFoundError } from '../../common/errors/internalErrors';
 import { DatabaseError } from 'pg';
+import { ComparatorsExpression } from '../../common/schema';
 
 export class UserRepository {
 
@@ -41,12 +42,13 @@ export class UserRepository {
             let query = this.db.selectFrom('user')
                 .select(selectedFields)
             
-            if(listingOptions.limit) query.limit(listingOptions.limit)
-            if(listingOptions.offset) query.offset(listingOptions.offset)
+            if(listingOptions.limit) query = query.limit(listingOptions.limit)
+            if(listingOptions.offset) query = query.offset(listingOptions.offset)
 
-            query = this.orderQuery(listingOptions, query)
+            query = this.orderQuery(listingOptions.orderby, query)
             query = this.whereQuery(listingOptions, query)
-            const users = query.execute()
+            const users = await query.execute()
+
             return users
         } catch (err) {
             this.logger.error(err, 'getUsers: error when getting users')
@@ -117,10 +119,9 @@ export class UserRepository {
     }
 
     // To be refactored to a generic function
-    private orderQuery(listingOptions: UserListingType, query: QueryBuilderWithSelection<From<Database, 'user'>, 'user', object, 'username' | 'name' | 'email' | 'bio'>) {
-        if(!listingOptions.orderby) return query;
-
-        const orderByOptions = listingOptions.orderby;
+    private orderQuery(orderByOptions: UserListingType['orderby'], 
+        query: QueryBuilderWithSelection<From<Database, 'user'>, 'user', object, 'username' | 'name' | 'email' | 'bio'>) {
+        if(!orderByOptions) return query;
         for(const field of Object.keys(orderByOptions)) {
             const typedField = field as (keyof typeof orderByOptions)
             query = query.orderBy(typedField, orderByOptions[typedField])

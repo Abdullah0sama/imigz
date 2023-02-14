@@ -10,7 +10,7 @@ import { Upload } from '@aws-sdk/lib-storage';
 import { MediaRepository } from './MediaRepository';
 import { PassThrough } from 'node:stream'
 import { config } from '../../config/config';
-import { MediaSelectType, UpdateMediaType } from './MediaSchema';
+import { MediaListingType, MediaSelectType, UpdateMediaType } from './MediaSchema';
 import { CreationError, NotFoundError } from '../../common/errors/internalErrors';
 
 const localUploadDestination = path.join(__dirname, '../../../', 'uploads')
@@ -53,6 +53,9 @@ export class MediaService {
             })
     }
 
+    async listMedia(mediaListingOptions: MediaListingType) {
+        return this.mediaRepositroy.listMedia(mediaListingOptions)
+    }
 
     async saveMedia(userId: number, req: express.Request) {
         
