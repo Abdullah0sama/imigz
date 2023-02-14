@@ -53,6 +53,8 @@ jobs:
           uses: actions/download-artifact@v3
           with:
             name: dist
+            path: dist
+
         - run: docker-compose up -d
         - run: npm install
         - run: npm run migrate:latest
