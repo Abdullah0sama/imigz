@@ -22,7 +22,8 @@ services:
       - LOCALSTACK_PERSISTENCE=1
 
     volumes:
-      - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
+      - './localstack-init.sh:/etc/localstack/init/ready.d/init-aws.sh'
+      # - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
 
   # app: 
