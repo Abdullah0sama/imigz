@@ -25,50 +25,90 @@ resource "aws_vpc" "main_vpc" {
   cidr_block = "10.0.0.0/16"
 }
 
-resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.main_vpc.owner_id
-}
-
-resource "aws_route_table" "public_subnet_1_route_table" {
-  vpc_id = aws_vpc.main_vpc
-}
-
-resource "aws_route" "public_1_internet_route" {
-  route_table_id = aws_route_table.public_subnet_1_route_table.id
-  gateway_id = aws_internet_gateway.igw.id
-  destination_cidr_block = "0.0.0.0/0"
-}
-
-resource "aws_route_table" "public_subnet_2_route_table" {
-  vpc_id = aws_vpc.main_vpc
-}
-
-resource "aws_route" "public_2_internet_route" {
-  route_table_id = aws_route_table.public_subnet_2_route_table.id
-  gateway_id = aws_internet_gateway.igw.id
-  destination_cidr_block = "0.0.0.0/0"
-}
 
 
-resource "aws_subnet" "public_subnet_1" {
+resource "aws_subnet" "public_subnets" {
   vpc_id                  = aws_vpc.main_vpc.id
-  count = 
+  count                   = length(var.availability_zones)
   map_public_ip_on_launch = true
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = data.aws_availability_zones.available_zones.names[0]
+  cidr_block              = element(var.public_subnets_cidr, count.index)
+  availability_zone       = var.availability_zones[count.index]
 }
 
-resource "aws_subnet" "public_subnet_2" {
-  vpc_id                  = aws_vpc.main_vpc.id
-  map_public_ip_on_launch = true
-  cidr_block              = "10.0.2.0/24"
-  availability_zone       = data.aws_availability_zones.available_zones.names[1]
-}
-
-resource "aws_subnet" "private_subnet_1" {
+resource "aws_subnet" "private_subnets" {
+  count                   = length(var.availability_zones)
   vpc_id                  = aws_vpc.main_vpc.id
   map_public_ip_on_launch = false
-  cidr_block              = "10.0.3.0/24"
-  availability_zone       = data.aws_availability_zones.available_zones.names[0]
+  cidr_block              = var.private_subnets_cidr[count.index]
+  availability_zone       = var.availability_zones[count.index]
 }
 
+
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.main_vpc.id
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main_vpc.id
+}
+
+resource "aws_route" "public_internet_route" {
+  route_table_id         = aws_route_table.public.id
+  gateway_id             = aws_internet_gateway.igw.id
+  destination_cidr_block = "0.0.0.0/0"
+}
+
+resource "aws_route_table_association" "public" {
+  count          = length(var.public_subnets_cidr)
+  route_table_id = aws_route_table.public.id
+  subnet_id      = element(aws_subnet.public_subnets.*.id, count.index)
+}
+
+
+resource "aws_security_group" "web-app" {
+  description = "Allow http, https, ssh"
+
+  vpc_id = aws_vpc.main_vpc.id
+  ingress = [
+    {
+      from_port        = 80
+      to_port          = 80
+      protocol         = "tcp"
+      cidr_blocks      = ["0.0.0.0/0"]
+      description      = "Http"
+      ipv6_cidr_blocks = ["::/0"]
+      prefix_list_ids  = []
+      security_groups  = []
+      self             = false
+    },
+    {
+      from_port        = 443
+      to_port          = 443
+      protocol         = "tcp"
+      cidr_blocks      = ["0.0.0.0/0"]
+      description      = "https"
+      ipv6_cidr_blocks = ["::/0"]
+      prefix_list_ids  = []
+      security_groups  = []
+      self             = false
+    },
+    {
+      from_port        = 22
+      to_port          = 22
+      protocol         = "tcp"
+      cidr_blocks      = ["0.0.0.0/0"]
+      description      = "ssh"
+      ipv6_cidr_blocks = ["::/0"]
+      prefix_list_ids  = []
+      security_groups  = []
+      self             = false
+    }
+  ]
+  egress {
+    description = "Allow all outgoing"
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
+    cidr_blocks = [ "0.0.0.0/0" ]
+  }
+}
