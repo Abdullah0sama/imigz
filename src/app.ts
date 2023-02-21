@@ -11,11 +11,19 @@ import { MediaService } from './components/media/MediaService';
 import { S3Client } from '@aws-sdk/client-s3'
 import { config } from './config/config';
 import { MediaRepository } from './components/media/MediaRepository';
+import { healthCheck } from './healthcheck';
+// import qs from 'qs';
 
 export function createApp (loggerOptions: LoggerOptions = {}): express.Application {
 
     const app = express();
     pino()
+
+    // To Remove aggreatelistingparams middleware
+    // app.set('query parser', (str: string) => {
+    //     const out = qs.parse(str, { allowDots: true })
+    //     console.dir(out, {depth: null})
+    // })
     app.use(express.json())
     const logger = pino(loggerOptions)
     app.internalModules = {
@@ -25,7 +33,11 @@ export function createApp (loggerOptions: LoggerOptions = {}): express.Applicati
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const s3Client = new S3Client(config.aws.s3 )
 
+    app.get('/', (req, res) => {
+        res.send('Hello V1')
+    })
 
+    
     const db = createDB()
     const userRepo = new UserRepository(db, logger.child({source: 'UserRepository'}))
     const userService = new UserService(userRepo)
@@ -37,6 +49,7 @@ export function createApp (loggerOptions: LoggerOptions = {}): express.Applicati
     app.use('/users', userController.getRouter())
     mediaController.setupRouter()
     app.use('/media', mediaController.getRouter())
+    app.get('/health', healthCheck)
     app.use(ErrorHandler)
     
     return app;
