@@ -70,28 +70,28 @@ resource "aws_security_group" "web-app" {
 
   vpc_id = aws_vpc.main_vpc.id
   ingress = [
-    {
-      from_port        = 80
-      to_port          = 80
-      protocol         = "tcp"
-      cidr_blocks      = ["0.0.0.0/0"]
-      description      = "Http"
-      ipv6_cidr_blocks = ["::/0"]
-      prefix_list_ids  = []
-      security_groups  = []
-      self             = false
-    },
-    {
-      from_port        = 443
-      to_port          = 443
-      protocol         = "tcp"
-      cidr_blocks      = ["0.0.0.0/0"]
-      description      = "https"
-      ipv6_cidr_blocks = ["::/0"]
-      prefix_list_ids  = []
-      security_groups  = []
-      self             = false
-    },
+    # {
+    #   from_port        = 80
+    #   to_port          = 80
+    #   protocol         = "tcp"
+    #   cidr_blocks      = ["0.0.0.0/0"]
+    #   description      = "Http"
+    #   ipv6_cidr_blocks = ["::/0"]
+    #   prefix_list_ids  = []
+    #   security_groups  = []
+    #   self             = false
+    # },
+    # {
+    #   from_port        = 443
+    #   to_port          = 443
+    #   protocol         = "tcp"
+    #   cidr_blocks      = ["0.0.0.0/0"]
+    #   description      = "https"
+    #   ipv6_cidr_blocks = ["::/0"]
+    #   prefix_list_ids  = []
+    #   security_groups  = []
+    #   self             = false
+    # },
     {
       from_port        = 22
       to_port          = 22
@@ -101,6 +101,17 @@ resource "aws_security_group" "web-app" {
       ipv6_cidr_blocks = ["::/0"]
       prefix_list_ids  = []
       security_groups  = []
+      self             = false
+    },
+    {
+      from_port        = 49153
+      to_port          = 65535
+      protocol         = "tcp"
+      cidr_blocks      = ["0.0.0.0/0"]
+      description      = "Allow traffic from alb"
+      ipv6_cidr_blocks = ["::/0"]
+      prefix_list_ids  = []
+      security_groups  = [ aws_security_group.loadbalancer.id ]
       self             = false
     }
   ]
@@ -132,15 +143,27 @@ resource "aws_security_group" "loadbalancer" {
   ]
 
   egress = [
+    # {
+    #   from_port        = 80
+    #   to_port          = 80
+    #   protocol         = "tcp"
+    #   cidr_blocks      = ["0.0.0.0/0"]
+    #   description      = "Http"
+    #   ipv6_cidr_blocks = ["::/0"]
+    #   prefix_list_ids  = []
+    #   security_groups  = []
+    #   self             = false
+    # }
+
     {
-      from_port        = 80
-      to_port          = 80
+      from_port        = 49153
+      to_port          = 65535
       protocol         = "tcp"
       cidr_blocks      = ["0.0.0.0/0"]
-      description      = "Http"
+      description      = "Allow traffic from to instances"
       ipv6_cidr_blocks = ["::/0"]
       prefix_list_ids  = []
-      security_groups  = []
+      security_groups  = [ ]
       self             = false
     }
   ]

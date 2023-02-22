@@ -95,7 +95,7 @@ resource "aws_lb_target_group" "backend" {
   health_check {
     path = "/health"
     protocol = "HTTP"
-    port = 80
+    port = "traffic-port" # For dynamic port mapping
     interval = 30
     timeout = 20
     healthy_threshold = 2
@@ -160,7 +160,7 @@ resource "aws_ecs_task_definition" "imigz" {
       portMappings = [
         {
           containerPort = 3000
-          hostPort      = 80
+          hostPort      = 0 # For dynamic port mapping 
         }
       ]
     }
