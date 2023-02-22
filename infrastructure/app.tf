@@ -17,7 +17,7 @@ data "aws_iam_policy_document" "ecs_agent" {
     actions = ["sts:AssumeRole"]
     principals {
       type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com", "ec2.amazonaws.com"]
+      identifiers = ["ecs-tasks.amazonaws.com", "ec2.amazonaws.com", "ecs.amazonaws.com"]
     }
   }
 }
@@ -69,8 +69,8 @@ resource "aws_launch_template" "app-template" {
 resource "aws_autoscaling_group" "asg" {
 
   min_size         = 1
-  desired_capacity = 1
-  max_size         = 2
+  desired_capacity = 2
+  max_size         = 4
 
   launch_template {
     id = aws_launch_template.app-template.id
@@ -80,6 +80,40 @@ resource "aws_autoscaling_group" "asg" {
   protect_from_scale_in = true
 }
 
+resource "aws_lb" "loadbalancer" {
+  name = "imigz-lb"
+  load_balancer_type = "application"
+  security_groups = [ aws_security_group.loadbalancer.id ]
+  subnets = aws_subnet.public_subnets.*.id
+}
+
+resource "aws_lb_target_group" "backend" {
+  port = 80
+  protocol = "HTTP"
+  vpc_id = aws_vpc.main_vpc.id
+  target_type = "instance"
+  health_check {
+    path = "/health"
+    protocol = "HTTP"
+    port = 80
+    interval = 30
+    timeout = 20
+    healthy_threshold = 2
+    unhealthy_threshold = 3
+    enabled = true
+  }
+}
+
+resource "aws_lb_listener" "backend" {
+  load_balancer_arn = aws_lb.loadbalancer.arn
+  port = 80
+  protocol = "HTTP"
+
+  default_action {
+    type = "forward"
+    target_group_arn = aws_lb_target_group.backend.arn
+  }
+}
 
 
 resource "aws_ecs_cluster" "appCluster" {
@@ -110,13 +144,19 @@ resource "aws_ecs_cluster_capacity_providers" "capacity_providers" {
 
 resource "aws_ecs_task_definition" "imigz" {
   family = "main_task"
-
   container_definitions = jsonencode([
     {
-      name = "first"
+      name = "imigz"
       image = "abdullah0sama/imigz"
-      memory = 150
-      cpu = 100
+      memory = 512
+      cpu = 512
+      essential = true
+      healthCheck = {
+        command = [ "CMD-SHELL", "curl -f http://localhost:3000/health || exit 1" ]
+        interval = 20
+        timeout = 5
+        retries = 3
+      }
       portMappings = [
         {
           containerPort = 3000
@@ -127,3 +167,47 @@ resource "aws_ecs_task_definition" "imigz" {
   ])
 }
 
+
+resource "aws_ecs_service" "imigz" {
+  name = "imigz"
+  cluster = aws_ecs_cluster.appCluster.id
+  task_definition = aws_ecs_task_definition.imigz.arn
+  desired_count = 2
+
+  scheduling_strategy = "REPLICA"
+  
+  capacity_provider_strategy {
+    capacity_provider = aws_ecs_capacity_provider.cap_prov.name
+    base = 2
+    weight = 1
+  }
+
+  # Defaults
+  deployment_maximum_percent = 200
+  deployment_minimum_healthy_percent = 100
+
+  
+  ordered_placement_strategy {
+    type = "spread"
+    field  = "attribute:ecs.availability-zone"
+  }
+
+  iam_role = "arn:aws:iam::699144434216:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS"
+
+  load_balancer {
+    container_port = 3000
+    container_name = "imigz"
+    target_group_arn = aws_lb_target_group.backend.arn
+  }
+  
+  # force_new_deployment = true
+
+  # triggers = {
+  #   redeployment = timestamp()
+  # }
+
+}
+
+# resource "aws_appautoscaling_target" "name" {
+  
+# }

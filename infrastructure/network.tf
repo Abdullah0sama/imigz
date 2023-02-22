@@ -112,3 +112,36 @@ resource "aws_security_group" "web-app" {
     cidr_blocks = [ "0.0.0.0/0" ]
   }
 }
+
+resource "aws_security_group" "loadbalancer" {
+  description = "load balancer security group"
+  vpc_id = aws_vpc.main_vpc.id
+
+  ingress = [
+    {
+      from_port        = 80
+      to_port          = 80
+      protocol         = "tcp"
+      cidr_blocks      = ["0.0.0.0/0"]
+      description      = "Http"
+      ipv6_cidr_blocks = ["::/0"]
+      prefix_list_ids  = []
+      security_groups  = []
+      self             = false
+    }
+  ]
+
+  egress = [
+    {
+      from_port        = 80
+      to_port          = 80
+      protocol         = "tcp"
+      cidr_blocks      = ["0.0.0.0/0"]
+      description      = "Http"
+      ipv6_cidr_blocks = ["::/0"]
+      prefix_list_ids  = []
+      security_groups  = []
+      self             = false
+    }
+  ]
+}
