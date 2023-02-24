@@ -100,7 +100,7 @@ export class UserRepository {
 
 
     // To be refactored to a generic function
-    private whereQuery(listingOptions: UserListingType, query: QueryBuilderWithSelection<From<Database, 'user'>, 'user', object, 'username' | 'name' | 'email' | 'bio'>) {
+    private whereQuery(listingOptions: UserListingType, query: QueryBuilderWithSelection<From<Database, 'user'>, 'user', object, 'username' | 'name' | 'email' | 'bio' | 'id'>) {
         if(!listingOptions.where) return query;
         const whereOptions = listingOptions.where;
 
@@ -120,7 +120,7 @@ export class UserRepository {
 
     // To be refactored to a generic function
     private orderQuery(orderByOptions: UserListingType['orderby'], 
-        query: QueryBuilderWithSelection<From<Database, 'user'>, 'user', object, 'username' | 'name' | 'email' | 'bio'>) {
+        query: QueryBuilderWithSelection<From<Database, 'user'>, 'user', object, 'username' | 'name' | 'email' | 'bio' | 'id'>) {
         if(!orderByOptions) return query;
         for(const field of Object.keys(orderByOptions)) {
             const typedField = field as (keyof typeof orderByOptions)

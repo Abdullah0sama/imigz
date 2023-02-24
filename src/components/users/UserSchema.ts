@@ -18,18 +18,18 @@ export const UpdateUserSchema = CreateUserSchema.partial()
 
 export type UpdateUserType = z.infer<typeof UpdateUserSchema>
 
-const userKeys = CreateUserSchema.keyof()
+// const UserKeysSchema = CreateUserSchema.keyof()
 
-export const DefaultUserKeys: (keyof CreateUserType)[] = ['name', 'username', 'bio', 'email'];
-
+export const DefaultUserKeys = ['name', 'username', 'bio', 'email', 'id'] as const;
+const UserKeysSchema = z.enum(DefaultUserKeys)
 
 const WhereCondition = z.record(ComparatorsSchema, z.any())
-const UserWhereValues = z.record(userKeys, WhereCondition)
-const UserOrderbyValues = z.record(userKeys, SortOrder)
+const UserWhereValues = z.record(UserKeysSchema, WhereCondition)
+const UserOrderbyValues = z.record(UserKeysSchema, SortOrder)
 
 
 export const UserListingSchema = z.object({
-    select: castToArray(z.array(userKeys)),
+    select: castToArray(z.array(z.enum(DefaultUserKeys))),
     limit: z.coerce.number().min(1),
     offset: z.coerce.number().min(0),
     where: UserWhereValues,
@@ -39,7 +39,7 @@ export const UserListingSchema = z.object({
 export type UserListingType = z.infer<typeof UserListingSchema>
 
 export const UserSelectSchema = z.object({
-    select: castToArray(userKeys.array().min(1)),
+    select: castToArray(z.array(z.enum(DefaultUserKeys)).min(1)),
 }).partial()
 
 export type UserSelectType = z.infer<typeof UserSelectSchema>
