@@ -6,6 +6,7 @@ import { string } from "zod"
 
 export const config: Config = {
     port: 3000,
+    host: 'http://localhost:3000',
 
     JWT_SECRET: "somehting",
 
@@ -15,7 +16,6 @@ export const config: Config = {
         database: 'imigz',
         password: 'postgres',
     },
-
     aws: {
         s3: {
             region: 'us-east-1',
@@ -28,6 +28,13 @@ export const config: Config = {
         },
         bucket: 'imigiz-699144434216',
         cloudfrontURL: 'somethinhere',
+    },
+
+    authServers: {
+        github: {
+            client_id: 'jn',
+            client_secret: 'j'
+        }
     }
 }
 
@@ -35,11 +42,16 @@ export const config: Config = {
 
 export interface Config {
     port: number,
+    host: string,
     JWT_SECRET: string,
     database: ConnectionConfig,
     aws: {
         s3: S3ClientConfig,
         bucket: string,
         cloudfrontURL: string
+    },
+
+    authServers: {
+        github: Record<'client_id' | 'client_secret', string>
     }
 }

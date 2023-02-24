@@ -12,6 +12,8 @@ import { S3Client } from '@aws-sdk/client-s3'
 import { config } from './config/config';
 import { MediaRepository } from './components/media/MediaRepository';
 import { healthCheck } from './healthcheck';
+import { AuthController } from './components/auth/AuthController';
+import { AuthService } from './components/auth/AuthService';
 // import qs from 'qs';
 
 export function createApp (loggerOptions: LoggerOptions = {}): express.Application {
@@ -31,24 +33,31 @@ export function createApp (loggerOptions: LoggerOptions = {}): express.Applicati
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const s3Client = new S3Client(config.aws.s3 )
-
-    app.get('/', (req, res) => {
-        res.send('Hello V1')
-    })
-
+    const s3Client = new S3Client(config.aws.s3)
     
     const db = createDB()
+    
     const userRepo = new UserRepository(db, logger.child({source: 'UserRepository'}))
     const userService = new UserService(userRepo)
     const userController = new UserController(userService)
+    
     const mediaRepository = new MediaRepository(db, logger.child({source: 'MediaRepository'}))
     const mediaService = new MediaService(s3Client, mediaRepository, logger.child({source: 'MediaService'}))
     const mediaController = new MediaController(mediaService)
+    
     userController.setupRouter()
     app.use('/users', userController.getRouter())
     mediaController.setupRouter()
     app.use('/media', mediaController.getRouter())
+    
+    const authService = new AuthService(userService, logger.child({source: 'AuthService'}))
+    const authController = new AuthController(authService)
+    authController.setupRouter()
+    app.use('/auth', authController.getRouter())
+
+    app.get('/', (req, res) => {
+        res.send('This is V1');
+    })
     app.get('/health', healthCheck)
     app.use(ErrorHandler)
     
