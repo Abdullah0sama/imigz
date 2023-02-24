@@ -14,15 +14,16 @@ export class AuthService {
         const access_token = await authHandler.getAccessToken(code)
         const userInfo = await authHandler.getUserInfo(access_token)
 
-        let user: UserTokenType;
+        let user: UserTokenType
         if (isSignIn) {
-            const [foundUser] = await this.userService.getUsers({ where: {email: {eq: userInfo.email }}}) 
-            user = { username: foundUser.username, userId: foundUser.bio}
+            const [ foundUser ] = await this.userService.getUsers({ where: {email: {eq: userInfo.email }}}) 
+            user = { username: foundUser.username, userId: foundUser.id }
         } else {
-            user = await this.userService.createUser(userInfo)
+            const createdUser = await this.userService.createUser(userInfo)
+            user = { username: createdUser.username, userId: createdUser.id }
         }
 
-        const createdJWTToken = await this.generateToken({ username: user.username, userId: user.id })
+        const createdJWTToken = await this.generateToken(user)
         this.logger.info(user)
         this.logger.info(createdJWTToken)
         return { token: createdJWTToken, user }

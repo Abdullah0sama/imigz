@@ -19,9 +19,8 @@ export class AuthController {
         this.router.get('/register/:site', async (req, res) => {
             const { site } = req.params
             const authServer = await AuthServerParamsSchema.parseAsync(site)
-            const s = req.query.signIn
             let callback = `${config.host}/auth/${authServer}`
-            if(req.query.signIn == 'true') callback += '?sign=true'
+            if(req.query.signIn === 'true') callback += '?signIn=true'
             res.status(303).redirect(AuthServersHandler[authServer].redirectURL(callback))
         })
 
@@ -29,7 +28,7 @@ export class AuthController {
             const { site } = req.params
             const AuthServer = await AuthServerParamsSchema.parseAsync(site)
             const code = req.query.code as string
-            const isSignIn = req.query.signIn == 'true'
+            const isSignIn = req.query.signIn === 'true'
             if(!code) throw new UnauthorizedError({ message: 'Something went wrong' })
             const { token, user } = await this.authService.accessAccount(AuthServer, code, isSignIn)
             res.status(200).send({ data: { token }}).end()
