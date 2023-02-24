@@ -9,8 +9,8 @@
     "lint:fix": "eslint src --ext .ts --fix",
     "migrate:latest": "node dist/config/database/migrateToLatest.js",
     "migrate:down": "node dist/config/database/migrateDown.js",
-    "dev": "ts-node src/server.ts | pino-pretty",
-    "test": "jest"
+    "dev": "NODE_ENV=development ts-node src/server.ts | pino-pretty",
+    "test": "NODE_ENV=development jest"
   },
   "keywords": [],
   "author": "",

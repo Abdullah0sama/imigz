@@ -12,6 +12,7 @@ on:
   
 jobs:
   push_to_dockerhub:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     name: Pushing to docker registery
     runs-on: ubuntu-latest
     steps:

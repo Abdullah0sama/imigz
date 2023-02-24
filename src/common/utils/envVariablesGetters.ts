@@ -23,8 +23,8 @@ export const getOptionalBoolean = (envName: string, defaultValue: boolean) => {
     return (envValue) ? envValue === 'true' : defaultValue
 }
 
-export const undefinedIfDevelopment = <T>(val: T) => {
-    return (isDevelopment) ? undefined : val
+export const undefinedIfNotDevelopment = <T>(val: T) => {
+    return (!isDevelopment) ? undefined : val
 }
 const isDevelopment= process.env['NODE_ENV'] === 'development'
 

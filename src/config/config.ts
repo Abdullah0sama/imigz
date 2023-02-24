@@ -1,9 +1,10 @@
 import { S3ClientConfig } from "@aws-sdk/client-s3"
 import { ConnectionConfig } from "pg"
-import { getMandatory, getMandatoryInt, getOptional, getOptionalBoolean, undefinedIfDevelopment } from "../common/utils/envVariablesGetters"
+import { getMandatory, getMandatoryInt, getOptional, getOptionalBoolean, undefinedIfNotDevelopment } from "../common/utils/envVariablesGetters"
 import * as path from 'path'
 
 import * as dotenv from 'dotenv'
+
 
 dotenv.config({
     path: path.join(__dirname, '../../', '.env.default')
@@ -12,7 +13,7 @@ dotenv.config({
 export const config: Config = (() => ({
     port: getMandatoryInt('PORT'),
     host: getMandatory('HOST'),
-
+    
     JWT_SECRET: getMandatory('JWT_SECRET'),
     database: {
         host: getMandatory('DATABASE_HOST'),
@@ -23,8 +24,14 @@ export const config: Config = (() => ({
     aws: {
         s3: {
             region: getMandatory('AWS_S3_REGION'),
-            endpoint: undefinedIfDevelopment(getOptional('AWS_S3_ENDPOINT', 'http://127.0.0.1:4566')),
-            forcePathStyle: undefinedIfDevelopment(getOptionalBoolean('AWS_S3_FORCE_PATH_STYLE', true))
+            endpoint: undefinedIfNotDevelopment(getOptional('AWS_S3_ENDPOINT', 'http://127.0.0.1:4566')),
+            forcePathStyle: undefinedIfNotDevelopment(getOptionalBoolean('AWS_S3_FORCE_PATH_STYLE', true)),
+
+            // For localstack running on a machine without ~/.aws
+            credentials: undefinedIfNotDevelopment({
+                accessKeyId: 'asfsaf',
+                secretAccessKey: 'afknsfn'
+            })
         },
         bucket: getMandatory('AWS_S3_BUCKET'),
         cloudfrontURL: getMandatory('AWS_CLOUDFRONT'),
