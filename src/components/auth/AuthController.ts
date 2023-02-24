@@ -19,7 +19,7 @@ export class AuthController {
         this.router.get('/register/:site', async (req, res) => {
             const { site } = req.params
             const authServer = await AuthServerParamsSchema.parseAsync(site)
-            let callback = `${config.host}/auth/${authServer}`
+            let callback = `${config.host}:${config.port}/auth/${authServer}`
             if(req.query.signIn === 'true') callback += '?signIn=true'
             res.status(303).redirect(AuthServersHandler[authServer].redirectURL(callback))
         })
