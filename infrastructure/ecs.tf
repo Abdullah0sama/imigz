@@ -26,6 +26,15 @@ resource "aws_ecs_cluster_capacity_providers" "capacity_providers" {
 
 resource "aws_ecs_task_definition" "imigz" {
   family = "main_task"
+  
+  task_role_arn = aws_iam_role.task_role.arn
+  execution_role_arn = aws_iam_role.task_execution_role.arn
+
+  depends_on = [
+    aws_iam_role.task_role,
+    aws_iam_role.task_execution_role
+  ]
+
   container_definitions = jsonencode([
     {
       name = "imigz"
@@ -37,6 +46,27 @@ resource "aws_ecs_task_definition" "imigz" {
         name = tkey
         value = val
       }]
+      
+      secrets = [
+        {
+          name = "DATABASE_PASSWORD"
+          valueFrom = "arn:aws:ssm:us-east-1:${var.accountId}:parameter/prod/imigz/DATABASE_PASSWORD"
+        },
+        {
+          name = "JWT_SECRET"
+          valueFrom = "arn:aws:ssm:us-east-1:${var.accountId}:parameter/prod/imigz/JWT_SECRET"
+        },
+        {
+          name = "GITHUB_CLIENT_ID"
+          valueFrom = "arn:aws:ssm:us-east-1:${var.accountId}:parameter/prod/imigz/GITHUB_CLIENT_ID"
+        },
+        {
+          name = "GITHUB_CLIENT_SECRET"
+          valueFrom = "arn:aws:ssm:us-east-1:${var.accountId}:parameter/prod/imigz/GITHUB_CLIENT_SECRET"
+        },
+
+      ]
+
       healthCheck = {
         command = [ "CMD-SHELL", "curl -f http://localhost:3000/health || exit 1" ]
         interval = 20

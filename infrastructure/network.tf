@@ -23,6 +23,8 @@ data "aws_availability_zones" "available_zones" {
 
 resource "aws_vpc" "main_vpc" {
   cidr_block = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support = true
 }
 
 
@@ -167,4 +169,22 @@ resource "aws_security_group" "loadbalancer" {
       self             = false
     }
   ]
+}
+
+
+resource "aws_security_group" "rdssg" {
+  vpc_id = aws_vpc.main_vpc.id
+  ingress {
+    from_port = 5432
+    to_port = 5432
+    protocol = "tcp"
+    cidr_blocks = [ "0.0.0.0/0" ]
+  }
+  egress {
+    description = "Allow all outgoing"
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
+    cidr_blocks = [ "0.0.0.0/0" ]
+  }
 }
