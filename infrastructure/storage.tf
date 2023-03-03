@@ -1,6 +1,6 @@
 
 resource "aws_s3_bucket" "main" {
-  bucket = "imigiz-699144434216"
+  bucket = var.S3_BUCKET
 }
 
 

@@ -52,5 +52,6 @@ variable "imigz_task_public_env" {
     AWS_S3_REGION         = string
     AWS_CLOUDFRONT        = string
 
+    CALLBACK              = string
   })
 }

@@ -1,5 +1,5 @@
 resource "aws_ecs_cluster" "appCluster" {
-  name = "imigiz-app-cluster"
+  name = "imigz-app-cluster"
 }
 
 resource "aws_ecs_capacity_provider" "cap_prov" {

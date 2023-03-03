@@ -13,7 +13,7 @@ dotenv.config({
 export const config: Config = (() => ({
     port: getMandatoryInt('PORT'),
     host: getMandatory('HOST'),
-    
+    CALLBACK: getMandatory('CALLBACK'),
     JWT_SECRET: getMandatory('JWT_SECRET'),
     database: {
         host: getMandatory('DATABASE_HOST'),
@@ -50,6 +50,7 @@ export interface Config {
     port: number,
     host: string,
     JWT_SECRET: string,
+    CALLBACK: string,
     database: ConnectionConfig,
     aws: {
         s3: S3ClientConfig,

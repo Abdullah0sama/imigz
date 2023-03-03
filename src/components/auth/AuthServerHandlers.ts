@@ -15,7 +15,7 @@ export const AuthServersHandler: Record<AuthServerEnum, AuthHandlerInterface> = 
 
         getAccessToken: async (code: string) => {
             const { client_id, client_secret } = config.authServers.github
-            const redirectUri = `${encodeURIComponent(config.host)}:${config.port}`
+            const redirectUri = `${encodeURIComponent(config.CALLBACK)}`
 
             const urlEncode = `client_id=${client_id}&client_secret=${client_secret}&code=${code}&redirect_uri=${redirectUri}`
             const oauthRes = await fetch('https://github.com/login/oauth/access_token', {
