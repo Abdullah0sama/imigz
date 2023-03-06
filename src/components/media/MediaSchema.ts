@@ -1,7 +1,6 @@
 import { z } from 'zod'
 import { ComparatorsSchema, SortOrder } from '../../common/schema'
 import { castToArray } from '../../common/schema'
-
 export const MediaDefaultFields = ['key', 'title', 'description', 'id', 'created_at', 'userRef', 'fileType'] as const
 
 
@@ -46,3 +45,8 @@ export const MediaListingOptionsSchema = z.object({
 }).partial()
 
 export type MediaListingType = z.infer<typeof MediaListingOptionsSchema>
+
+export type fileDestinationIdentifier = {
+    key: string
+    fileType: string
+}

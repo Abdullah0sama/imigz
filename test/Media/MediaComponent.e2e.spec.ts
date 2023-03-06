@@ -42,7 +42,7 @@ describe('POST /upload', () => {
 
             expect(response.body.data).toBeDefined()
             expect(response.body.data.key).toBeDefined()
-            expect(response.body.data.baseURL).toBeDefined()
+            expect(response.body.data.URL).toBeDefined()
 
     }, 10000)
 
@@ -55,7 +55,7 @@ describe('POST /upload', () => {
 
             expect(response.body.data).toBeDefined()
             expect(response.body.data.key).toBeDefined()
-            expect(response.body.data.baseURL).toBeDefined()
+            expect(response.body.data.URL).toBeDefined()
 
     }, 10000)
 

@@ -1,5 +1,5 @@
 import { ZodTypeAny, z } from 'zod';
-
+import express from 'express'
 export const ComparatorsSchema = z.enum([
     'gte', 
     'gt', 
@@ -31,3 +31,5 @@ export const castToArray = <T extends ZodTypeAny>(schema: T) => z.preprocess((ar
     if(Array.isArray(arg)) return arg;
     else return [arg]
 }, schema)
+
+export type FileRequest = Pick<express.Request, 'headers' | 'pipe'>

@@ -1,72 +1,67 @@
 import { BaseLogger } from 'pino';
 import busboy from 'busboy';
-import express from 'express'
-import * as fs from 'fs'
 import * as path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { EntityNotCreatedError, EntityNotFoundError, PayloadTooLarge, UnsupportedMediaType } from '../../common/errors/publicErrors';
-import { DeleteObjectCommand, PutObjectCommandInput, S3Client } from '@aws-sdk/client-s3';
-import { Upload } from '@aws-sdk/lib-storage';
 import { MediaRepository } from './MediaRepository';
-import { PassThrough } from 'node:stream'
 import { config } from '../../config/config';
-import { MediaListingType, MediaSelectType, UpdateMediaType } from './MediaSchema';
+import { MediaListingType, MediaSelectType, UpdateMediaType, fileDestinationIdentifier } from './MediaSchema';
 import { CreationError, NotFoundError } from '../../common/errors/internalErrors';
+import { FileRequest } from '../../common/schema';
+import { MediaHandler } from './storageHandlers/interface';
 
-const localUploadDestination = path.join(__dirname, '../../../', 'uploads')
-const s3UploadDestination = path.join('uploads');
+// const localUploadDestination = path.join(__dirname, '../../../', 'uploads')
 
 export class MediaService {
     private static readonly acceptedFiles = ['jpeg', 'jpg', 'png', 'gif']
     private static readonly maxFileSize = 1024 * 1024 * 15;
     private static readonly cloudfrontURL = config.aws.cloudfrontURL
-    private readonly logger: BaseLogger
-    private readonly s3Client: S3Client
-    private readonly mediaRepositroy: MediaRepository
 
-    constructor(s3Client: S3Client, mediaRepository: MediaRepository, logger: BaseLogger) {
-        this.logger = logger
-        this.s3Client = s3Client
-        this.mediaRepositroy = mediaRepository
-
-        // if(!fs.existsSync(localUploadDestination))
-        //     fs.mkdirSync(localUploadDestination)
+    constructor(
+            private readonly mediaHandler: MediaHandler, 
+            private readonly mediaRepository: MediaRepository, 
+            private readonly logger: BaseLogger
+        ) {
     }
 
 
     async deleteMedia(key: string) {
-        await this.mediaRepositroy.deleteMedia(key);
-        await this.deleteMediaFromS3(key)
+        await this.mediaRepository.deleteMedia(key);
+        await this.mediaHandler.deleteMedia(key)
     }
 
     async updateMedia(key: string, mediaInfo: UpdateMediaType) {
-        return this.mediaRepositroy.updateMedia(key, mediaInfo);
+        return this.mediaRepository.updateMedia(key, mediaInfo);
     }
 
     async getMedia(key: string, mediaSelectOptions: MediaSelectType) {
-        return this.mediaRepositroy.getMedia(key, mediaSelectOptions)
+        const mediaData = await this.mediaRepository.getMedia(key, mediaSelectOptions)
             .catch((err) => {
                 if(err instanceof NotFoundError) throw new EntityNotFoundError({ 
                     message: err.message
                 })
                 else throw err;
             })
+        
+        return {
+            ...mediaData,
+            URL: this.constructURL(mediaData)
+        }
     }
 
     async listMedia(mediaListingOptions: MediaListingType) {
-        return this.mediaRepositroy.listMedia(mediaListingOptions)
+        return this.mediaRepository.listMedia(mediaListingOptions)
     }
 
-    async saveMedia(userId: number, req: express.Request) {
+    async saveMedia(userId: number, req: FileRequest) {
         
         try {
             // We only accept on file at a time for now
             const [ mediaInformation ] = await this.uploadPromise(req)
-            await this.mediaRepositroy.createMedia(userId, mediaInformation)
-            
+            await this.mediaRepository.createMedia(userId, mediaInformation)        
             return { 
                 ...mediaInformation, 
-                baseURL: MediaService.cloudfrontURL 
+                URL: this.constructURL(mediaInformation) 
             }
         } catch (err) {
             if(err instanceof CreationError) {
@@ -80,7 +75,7 @@ export class MediaService {
     }
 
 
-    private uploadPromise(req: Pick<express.Request, 'headers' | 'pipe'>): Promise<{ key: string, fileType: string }[]> {
+    private uploadPromise(req: FileRequest): Promise<fileDestinationIdentifier[]> {
         return new Promise((resolve, reject) => {
             const bb = this.createBusboy(req.headers)
             
@@ -97,7 +92,7 @@ export class MediaService {
 
                 const key = uuidv4();
                 const destinationFileName = `${key}.${fileType}`
-                const { destinationPromise, destinationStream, cleanUp } = this.saveMediaToS3(destinationFileName, info.mimeType)
+                const { destinationPromise, destinationStream } = this.mediaHandler.saveMedia(destinationFileName, info.mimeType)
                 
                 fileStream.pipe(destinationStream)
                 destinationPromise.then((res) => resolve([ { key, fileType } ]))
@@ -108,7 +103,7 @@ export class MediaService {
 
                 fileStream.on('limit', async () => {
                     bb.emit('error', new PayloadTooLarge({ message: 'Payload is larger than server limit' }))
-                    await cleanUp()
+                    await this.mediaHandler.deleteMedia(destinationFileName)
                 })
             })
             
@@ -123,64 +118,27 @@ export class MediaService {
 
             req.pipe(bb)
         })
-    }
+    }  
 
-    private deleteMediaFromS3(filePath: string) {
-        return this.s3Client.send(new DeleteObjectCommand({
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            Bucket: config.aws.bucket,
-            Key: filePath,
-        }))
-    }
+    // private saveMediaToLocalDisk(filePath: string): SaveToMedia {
+    //     const destinationPath = path.join(localUploadDestination, filePath)
+    //     const destinationStream = fs.createWriteStream(destinationPath)
+    //     const destinationPromise = new Promise((resolve, reject) => {
+    //         destinationStream.on('finish', (resolve))
+    //         destinationStream.on('error', reject)
+    //     })
 
-    private saveMediaToS3(filePath: string, mimeType: string): SaveToMedia {
-        const destinationPath = path.join(s3UploadDestination, filePath)
-        const destinationStream = new PassThrough()
-        const uploadParams: PutObjectCommandInput = {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            Bucket: config.aws.bucket,
-            Key: destinationPath,
-            Body: destinationStream,
-            ContentType: mimeType
-        }
+    //     const cleanUp = () => new Promise((resolve, reject) => {
+    //         fs.rm(destinationPath, (err) => {
+    //             if(err) reject(err)
+    //             else resolve('File delete successfully')
+    //         })
+    //     })
 
-        const destinationPromise = new Promise((resolve, reject) => {
-            const upload = new Upload({
-                client: this.s3Client,
-                params: uploadParams,
-                queueSize: 8,
-                partSize: 1024 * 1024 * 5,
-                leavePartsOnError: false,
-            })
-            upload.done().then(value => resolve(value))
-            .catch((err) => reject(err))
-            // upload.on('httpUploadProgress', (porg) => console.log(porg))
-        })
+    //     return { destinationPromise, destinationStream, cleanUp }
+    // }
 
-        const cleanUp = () => this.deleteMediaFromS3(destinationPath)
-        
-        return { destinationPromise, destinationStream, cleanUp }
-    }
-
-    private saveMediaToLocalDisk(filePath: string): SaveToMedia {
-        const destinationPath = path.join(localUploadDestination, filePath)
-        const destinationStream = fs.createWriteStream(destinationPath)
-        const destinationPromise = new Promise((resolve, reject) => {
-            destinationStream.on('finish', (resolve))
-            destinationStream.on('error', reject)
-        })
-
-        const cleanUp = () => new Promise((resolve, reject) => {
-            fs.rm(destinationPath, (err) => {
-                if(err) reject(err)
-                else resolve('File delete successfully')
-            })
-        })
-
-        return { destinationPromise, destinationStream, cleanUp }
-    }
-
-    private createBusboy(headers: express.Request['headers']): busboy.Busboy {
+    private createBusboy(headers: FileRequest['headers']): busboy.Busboy {
         const bb = busboy({
             headers,
             limits: {
@@ -191,10 +149,10 @@ export class MediaService {
 
         return bb
     }
-}
 
-interface SaveToMedia { 
-    destinationPromise: Promise<unknown>,
-    destinationStream: NodeJS.WritableStream,
-    cleanUp: () => Promise<unknown>
+    private constructURL(media: Partial<fileDestinationIdentifier>) {
+        if(!media.key) return undefined
+        const dest = `${media.key}.${ (media.fileType)? media.fileType : '' }`
+        return path.join(config.aws.cloudfrontURL, dest)
+    }
 }

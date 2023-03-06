@@ -14,12 +14,12 @@ import { MediaRepository } from './components/media/MediaRepository';
 import { healthCheck } from './healthcheck';
 import { AuthController } from './components/auth/AuthController';
 import { AuthService } from './components/auth/AuthService';
+import { S3Service } from './components/media/storageHandlers/s3Handler';
 // import qs from 'qs';
 
 export function createApp (loggerOptions: LoggerOptions = {}): express.Application {
 
     const app = express();
-    pino()
 
     // To Remove aggreatelistingparams middleware
     // app.set('query parser', (str: string) => {
@@ -41,8 +41,9 @@ export function createApp (loggerOptions: LoggerOptions = {}): express.Applicati
     const userService = new UserService(userRepo)
     const userController = new UserController(userService)
     
+    const mediaHandler = new S3Service(s3Client);
     const mediaRepository = new MediaRepository(db, logger.child({source: 'MediaRepository'}))
-    const mediaService = new MediaService(s3Client, mediaRepository, logger.child({source: 'MediaService'}))
+    const mediaService = new MediaService(mediaHandler, mediaRepository, logger.child({source: 'MediaService'}))
     const mediaController = new MediaController(mediaService)
     
     userController.setupRouter()
