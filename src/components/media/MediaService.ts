@@ -61,11 +61,11 @@ export class MediaService {
         
         try {
             // We only accept on file at a time for now
-            const [ key ] = await this.uploadPromise(req)
-            await this.mediaRepositroy.createMedia(userId, { key })
+            const [ mediaInformation ] = await this.uploadPromise(req)
+            await this.mediaRepositroy.createMedia(userId, mediaInformation)
             
             return { 
-                key, 
+                ...mediaInformation, 
                 baseURL: MediaService.cloudfrontURL 
             }
         } catch (err) {
@@ -80,7 +80,7 @@ export class MediaService {
     }
 
 
-    private uploadPromise(req: express.Request): Promise<string[]> {
+    private uploadPromise(req: Pick<express.Request, 'headers' | 'pipe'>): Promise<{ key: string, fileType: string }[]> {
         return new Promise((resolve, reject) => {
             const bb = this.createBusboy(req.headers)
             
@@ -100,7 +100,7 @@ export class MediaService {
                 const { destinationPromise, destinationStream, cleanUp } = this.saveMediaToS3(destinationFileName, info.mimeType)
                 
                 fileStream.pipe(destinationStream)
-                destinationPromise.then((res) => resolve([ key ]))
+                destinationPromise.then((res) => resolve([ { key, fileType } ]))
                 .catch((err) => {
                     this.logger.error(err)
                     reject(err)

@@ -2,12 +2,13 @@ import { z } from 'zod'
 import { ComparatorsSchema, SortOrder } from '../../common/schema'
 import { castToArray } from '../../common/schema'
 
-export const MediaDefaultFields = ['key', 'title', 'description', 'id', 'created_at', 'userRef'] as const
+export const MediaDefaultFields = ['key', 'title', 'description', 'id', 'created_at', 'userRef', 'fileType'] as const
 
 
 export const CreateMediaSchema = z.object({
     key: z.string().uuid(),
     title: z.string().max(40).optional(),
+    fileType: z.string().optional(),
     description: z.string().max(150).optional(),
 })
 
